@@ -1,0 +1,4 @@
+# requirements.txt — Python package dependencies for the Server Monitoring Dashboard
+# Install all dependencies with: pip install -r requirements.txt
+
+flask>=3.0.0   # Flask: the core Python web framework (routes, templates, static files, dev server)

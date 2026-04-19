@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<!-- DOCTYPE: Tells the browser to render in modern HTML5 standards mode (not quirks mode) -->
+<html lang="en">
+<!-- lang="en": Declares the page language as English — important for screen readers and SEO -->
+
+<head>
+  <!-- ── META TAGS ─────────────────────────────────────────────────────────── -->
+  <meta charset="UTF-8">
+  <!-- charset=UTF-8: Enables full Unicode support so special characters, symbols, and emoji render correctly -->
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- viewport: Makes the layout responsive — on mobile the page scales to device width instead of zooming out -->
+
+  <title>Server Monitoring Dashboard | SMP Admin</title>
+  <!-- title: Text shown in the browser tab and used by search engines as the page headline -->
+
+  <!-- ── GOOGLE FONTS ──────────────────────────────────────────────────────── -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <!-- preconnect: Opens an early TCP connection to Google Fonts CDN, reducing font-load latency -->
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- preconnect + crossorigin: Opens an early CORS-enabled connection to the font-file CDN (gstatic) -->
+
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Loads two typefaces:
+       - JetBrains Mono: monospace font used for IPs, hostnames, and code-like values
+       - Syne: geometric sans-serif for headings and UI labels; gives the dashboard a technical edge
+       display=swap: Shows fallback font immediately while custom font loads, preventing invisible text -->
+
+  <!-- ── EXTERNAL CSS LIBRARY ──────────────────────────────────────────────── -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Font Awesome 6.5: Icon library — provides sidebar nav icons, status icons, and action buttons via CSS classes -->
+
+  <!-- ── PROJECT STYLESHEET ────────────────────────────────────────────────── -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <!-- url_for('static', ...): Flask Jinja2 helper that generates the correct URL to /static/css/style.css
+       This ensures the correct path even if the app is deployed at a sub-path (e.g., /dashboard/) -->
+</head>
+
+<body>
+<!-- body: Contains all visible page content rendered in the browser viewport -->
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     LAYOUT WRAPPER — outermost flex container
+     Splits the page into two columns: sidebar (left) + main content (right)
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="layout">
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SIDEBAR NAVIGATION  —  Left panel, always visible
+       Contains branding, nav links, and institution footer
+  ════════════════════════════════════════════════════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+  <!-- aside: Semantic HTML5 landmark for secondary/navigational content
+       class="sidebar": Applies sidebar styles (fixed width, dark background)
+       id="sidebar": JavaScript target for mobile toggle behavior -->
+
+    <!-- ── Sidebar Header: branding block ──────────────────────────────────── -->
+    <div class="sidebar-header">
+      <!-- Animated pulsing dot that indicates the system is live/online -->
+      <div class="brand-icon">
+        <span class="pulse-dot"></span>
+        <!-- pulse-dot: CSS-animated green dot using @keyframes to signal active monitoring status -->
+        <i class="fas fa-server"></i>
+        <!-- fa-server: Font Awesome server icon — visually identifies this as a server management tool -->
+      </div>
+      <div class="brand-text">
+        <span class="brand-label">SMP ADMIN</span>
+        <!-- brand-label: Small uppercase text identifying the admin role/system -->
+        <span class="brand-title">ServerWatch</span>
+        <!-- brand-title: Large bold application name displayed in the sidebar header -->
+      </div>
+    </div>
+
+    <!-- ── Navigation Menu: one button per dashboard section ──────────────── -->
+    <nav class="sidebar-nav">
+    <!-- nav: Semantic HTML5 landmark for primary navigation — helps screen readers jump directly here -->
+
+      <!-- Each <a> is a nav link; data-section matches the section id in main content -->
+      <!-- The "active" class highlights the currently selected page link -->
+
+      <a href="#" class="nav-link active" data-section="overview">
+      <!-- data-section="overview": Read by JS to determine which content section to show/hide -->
+        <i class="fas fa-chart-pie"></i>
+        <!-- fa-chart-pie: Pie-chart icon representing the Overview / Dashboard summary section -->
+        <span>Overview</span>
+      </a>
+
+      <a href="#" class="nav-link" data-section="inventory">
+        <i class="fas fa-server"></i>
+        <!-- fa-server: Server rack icon representing the Server Inventory list section -->
+        <span>Server Inventory</span>
+      </a>
+
+      <a href="#" class="nav-link" data-section="disk">
+        <i class="fas fa-hdd"></i>
+        <!-- fa-hdd: Hard-drive icon representing the Disk Usage Monitoring section -->
+        <span>Disk Monitoring</span>
+      </a>
+
+      <a href="#" class="nav-link" data-section="team">
+        <i class="fas fa-users"></i>
+        <!-- fa-users: Group-of-people icon representing the Team Details section -->
+        <span>Team Details</span>
+      </a>
+
+      <a href="#" class="nav-link" data-section="roster">
+        <i class="fas fa-calendar-alt"></i>
+        <!-- fa-calendar-alt: Calendar icon representing the monthly shift roster section -->
+        <span>Team Roster</span>
+      </a>
+    </nav>
+
+    <!-- ── Sidebar Footer: institution credit ─────────────────────────────── -->
+    <div class="sidebar-footer">
+      <i class="fas fa-university"></i>
+      <!-- fa-university: Building icon representing the educational institution -->
+      <span>IET, DDU Gorakhpur University<br>Dept. of Information Technology</span>
+      <!-- Displays institution name and department as required in the project documentation -->
+    </div>
+  </aside>
+  <!-- End of sidebar -->
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       MAIN CONTENT AREA  —  Right panel, fills remaining width
+       Contains the top header bar and all content sections (pages)
+  ════════════════════════════════════════════════════════════════════════════ -->
+  <div class="main-content">
+
+    <!-- ── Top Header Bar ─────────────────────────────────────────────────── -->
+    <header class="topbar">
+    <!-- header: Semantic HTML5 landmark for the page/section header area -->
+
+      <!-- Left side of topbar: mobile menu toggle + dynamic page title -->
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle sidebar">
+        <!-- button: Clickable element for mobile sidebar toggle
+             aria-label: Accessibility label for screen readers that can't see the icon -->
+          <i class="fas fa-bars"></i>
+          <!-- fa-bars: Hamburger/menu icon — tapped on mobile to open/close the sidebar -->
+        </button>
+        <h1 class="page-title" id="pageTitle">Dashboard Overview</h1>
+        <!-- page-title: Dynamic heading text — updated by JavaScript when the user switches sections
+             id="pageTitle": Referenced by JS to update the title text on navigation -->
+      </div>
+
+      <!-- Right side of topbar: last-updated timestamp injected by Flask -->
+      <div class="topbar-right">
+        <div class="topbar-time">
+          <i class="fas fa-clock"></i>
+          <!-- fa-clock: Clock icon before the timestamp -->
+          <span>{{ now }}</span>
+          <!-- {{ now }}: Jinja2 template variable — Flask injects the server's current date/time string here -->
+        </div>
+      </div>
+    </header>
+    <!-- End of topbar -->
+
+    <!-- ── Content Sections Wrapper ──────────────────────────────────────── -->
+    <div class="content-wrapper">
+    <!-- content-wrapper: Scrollable area below the topbar that holds all five section panels -->
+
+      <!-- ══════════════════════════════════════════════════════════════════
+           SECTION 1: OVERVIEW  —  SRS §5.1 Dashboard Module
+           Default visible section; shows KPI stat cards + disk bars + env counts
+      ══════════════════════════════════════════════════════════════════════ -->
+      <section class="content-section active" id="section-overview">
+      <!-- section: Semantic HTML5 landmark for a self-contained content area
+           class="content-section active": Sections hidden by default; "active" class shows this one first
+           id="section-overview": Matched by JS when the "overview" nav link is clicked -->
+
+        <div class="section-header">
+          <h2>📊 Dashboard Overview</h2>
+          <!-- Section heading displayed at the top of the overview content area -->
+          <p>Real-time server health and infrastructure summary</p>
+          <!-- Subtitle describing what this section contains -->
+        </div>
+
+        <!-- KPI Stat Cards Row: five cards loaded via JS fetch('/api/summary') -->
+        <div class="stat-cards" id="statCards">
+        <!-- stat-cards: Flex container for the five KPI summary cards
+             id="statCards": JS target — cards are injected here by renderSummary() -->
+          <!-- Cards are dynamically injected by JavaScript — see static/js/main.js renderSummary() -->
+        </div>
+
+        <!-- Disk Usage Visual Summary Card -->
+        <div class="card" id="diskSummaryCard">
+        <!-- card: Reusable white rounded-corner card component
+             id="diskSummaryCard": JS target for injecting disk progress bars -->
+          <div class="card-header">
+            <h3><i class="fas fa-hdd"></i> Disk Usage Summary</h3>
+            <!-- Card heading with hard-drive icon for the mini disk overview on the home page -->
+          </div>
+          <div class="card-body" id="diskSummaryBars">
+          <!-- card-body: Inner content area of the card
+               id="diskSummaryBars": JS injects one progress-bar row per server here -->
+            <!-- Disk bars injected by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Server Count by Environment Card -->
+        <div class="card" id="envCard">
+        <!-- id="envCard": JS target for injecting environment count tiles -->
+          <div class="card-header">
+            <h3><i class="fas fa-globe"></i> Servers by Environment</h3>
+            <!-- Card heading with globe icon for the environment breakdown section -->
+          </div>
+          <div class="card-body">
+            <div class="env-tiles" id="envTiles">
+            <!-- env-tiles: Flex container for the four environment count boxes
+                 id="envTiles": JS injects one tile per environment type here -->
+              <!-- Environment tiles injected by JavaScript -->
+            </div>
+          </div>
+        </div>
+
+      </section>
+      <!-- End of Overview section -->
+
+      <!-- ══════════════════════════════════════════════════════════════════
+           SECTION 2: SERVER INVENTORY  —  SRS §5.3 Inventory Management Module
+           Filterable + searchable table of all monitored servers
+      ══════════════════════════════════════════════════════════════════════ -->
+      <section class="content-section" id="section-inventory">
+      <!-- Hidden by default; shown when "inventory" nav link is clicked -->
+
+        <div class="section-header">
+          <h2>📋 Server Inventory</h2>
+          <p>Complete server configuration and status registry</p>
+        </div>
+
+        <!-- Filter Controls Row: environment pills + search input -->
+        <div class="filters">
+        <!-- filters: Flex row containing the environment filter pills and search box -->
+
+          <div class="filter-pills" id="envFilters">
+          <!-- filter-pills: Container for the clickable environment filter buttons
+               id="envFilters": JS injects one <button> per environment option here -->
+            <!-- Filter pill buttons injected by JavaScript -->
+          </div>
+
+          <div class="search-box">
+          <!-- search-box: Wrapper that adds the magnifier icon and input in a styled row -->
+            <i class="fas fa-search"></i>
+            <!-- fa-search: Magnifier icon inside the search field as a visual affordance -->
+            <input type="text" id="inventorySearch" placeholder="Search hostname, IP, or app…">
+            <!-- type="text": Standard text input for the live search query
+                 id="inventorySearch": JS attaches a keyup event listener to filter the table in real time
+                 placeholder: Hint text shown when the input is empty -->
+          </div>
+        </div>
+
+        <!-- Inventory Table Card -->
+        <div class="card table-card">
+        <!-- table-card: Card variant styled for full-width data tables with horizontal scroll -->
+          <div class="table-responsive">
+          <!-- table-responsive: Enables horizontal scrolling on small screens so all 13 columns remain accessible -->
+            <table class="data-table" id="inventoryTable">
+            <!-- data-table: Base table styles (border-collapse, font sizes, row colors)
+                 id="inventoryTable": JS target — tbody rows are dynamically injected here -->
+              <thead>
+              <!-- thead: Table header row group — always visible (sticky) at the top as user scrolls down -->
+                <tr>
+                  <!-- One <th> per inventory field — matches the 13 required columns from SRS §5.3 -->
+                  <th>Team</th>           <!-- Owning team: SMP or SCMS -->
+                  <th>Application</th>    <!-- Server/application name -->
+                  <th>IP Address</th>     <!-- Static IPv4 address -->
+                  <th>Hostname</th>       <!-- DNS hostname -->
+                  <th>Environment</th>    <!-- Deployment env: Production/UAT/DR/Dev -->
+                  <th>Status</th>         <!-- Operational status: Active/Warning/Inactive -->
+                  <th>OS Type</th>        <!-- Operating system family: Linux RHEL / Windows -->
+                  <th>OS Version</th>     <!-- Specific OS version: 8.8 / 9.0 / 2019 -->
+                  <th>Technology</th>     <!-- Primary tech stack: Java/Oracle/Nginx/MSSQL/Node.js -->
+                  <th>Category</th>       <!-- Server function: App / DB / Web -->
+                  <th>Memory</th>         <!-- RAM capacity: e.g., 16 GB -->
+                  <th>CPU Cores</th>      <!-- Number of processor cores -->
+                  <th>HW Type</th>        <!-- Hardware type: Physical or VM -->
+                </tr>
+              </thead>
+              <tbody id="inventoryBody">
+              <!-- tbody: Table body — rows are dynamically injected by renderInventory() in main.js
+                   id="inventoryBody": Direct target for JS innerHTML updates -->
+                <!-- Rows injected by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+          <div class="table-footer" id="inventoryCount">
+          <!-- table-footer: Row below the table showing the "Showing X of Y servers" count
+               id="inventoryCount": Updated by JS after each filter/search operation -->
+            <!-- Row count injected by JavaScript -->
+          </div>
+        </div>
+
+      </section>
+      <!-- End of Inventory section -->
+
+      <!-- ══════════════════════════════════════════════════════════════════
+           SECTION 3: DISK MONITORING  —  SRS §5.2 Disk Monitoring Module
+           Progress-bar table with color-coded Critical/Warning/Normal status
+      ══════════════════════════════════════════════════════════════════════ -->
+      <section class="content-section" id="section-disk">
+
+        <div class="section-header">
+          <h2>💾 Disk Usage Monitoring</h2>
+          <p>Storage utilization across all monitored servers</p>
+        </div>
+
+        <!-- Disk threshold legend: explains the three color-coded severity levels -->
+        <div class="disk-legend">
+        <!-- disk-legend: Horizontal row of color-coded legend badges -->
+          <span class="legend-badge critical"><i class="fas fa-circle"></i> Critical ≥85%</span>
+          <!-- critical: Red badge — signals immediately actionable disk full alert -->
+          <span class="legend-badge warning"><i class="fas fa-circle"></i> Warning 65–84%</span>
+          <!-- warning: Amber badge — signals elevated usage that should be monitored -->
+          <span class="legend-badge normal"><i class="fas fa-circle"></i> Normal &lt;65%</span>
+          <!-- normal: Green badge — signals disk usage within acceptable limits
+               &lt;: HTML entity for the < character (avoids being parsed as an HTML tag) -->
+        </div>
+
+        <!-- Disk Usage Table Card -->
+        <div class="card table-card">
+          <div class="table-responsive">
+            <table class="data-table" id="diskTable">
+            <!-- id="diskTable": JS target — disk rows are injected into the tbody here -->
+              <thead>
+                <tr>
+                  <!-- Six columns covering all disk metrics required by SRS §5.2 -->
+                  <th>Hostname</th>         <!-- Server identifier -->
+                  <th>Total (GB)</th>       <!-- Total disk capacity in gigabytes -->
+                  <th>Used (GB)</th>        <!-- Currently consumed disk space in GB -->
+                  <th>Available (GB)</th>   <!-- Free / remaining disk space in GB -->
+                  <th>Utilization</th>      <!-- Visual progress bar + percentage value -->
+                  <th>Status</th>           <!-- Critical / Warning / Normal severity badge -->
+                </tr>
+              </thead>
+              <tbody id="diskBody">
+              <!-- id="diskBody": JS renderDisk() injects one <tr> per server here -->
+                <!-- Rows injected by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+      <!-- End of Disk Monitoring section -->
+
+      <!-- ══════════════════════════════════════════════════════════════════
+           SECTION 4: TEAM DETAILS  —  SRS §5.4 Team Roster Module (employee view)
+           Searchable table of all IT personnel with contact information
+      ══════════════════════════════════════════════════════════════════════ -->
+      <section class="content-section" id="section-team">
+
+        <div class="section-header">
+          <h2>👥 Team Details</h2>
+          <p>IT personnel directory and project assignments</p>
+        </div>
+
+        <!-- Search box for filtering team members by name, project, or employee ID -->
+        <div class="filters">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="teamSearch" placeholder="Search by name, project, or ID…">
+            <!-- id="teamSearch": JS attaches keyup event to filter team rows in real time -->
+          </div>
+        </div>
+
+        <!-- Team Members Table Card -->
+        <div class="card table-card">
+          <div class="table-responsive">
+            <table class="data-table" id="teamTable">
+            <!-- id="teamTable": JS target for team member row injection -->
+              <thead>
+                <tr>
+                  <!-- Six columns matching the employee record fields from SRS §3.3 Team Roster Data -->
+                  <th>Emp ID</th>            <!-- Unique employee identifier: e.g., EMP001 -->
+                  <th>Employee Name</th>     <!-- Full name of the IT staff member -->
+                  <th>Date of Joining</th>   <!-- Employment start date in YYYY-MM-DD format -->
+                  <th>Project</th>           <!-- Assigned project team: SMP or SCMS -->
+                  <th>Contact Number</th>    <!-- Mobile phone number -->
+                  <th>Email ID</th>          <!-- Official email address -->
+                </tr>
+              </thead>
+              <tbody id="teamBody">
+              <!-- id="teamBody": JS renderTeam() injects one <tr> per employee here -->
+                <!-- Rows injected by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+      <!-- End of Team Details section -->
+
+      <!-- ══════════════════════════════════════════════════════════════════
+           SECTION 5: TEAM ROSTER  —  SRS §5.4 Team Roster Module (shift calendar)
+           31-column × 11-row monthly shift calendar with color-coded shift codes
+      ══════════════════════════════════════════════════════════════════════ -->
+      <section class="content-section" id="section-roster">
+
+        <div class="section-header">
+          <h2>📅 Team Roster — March 2025</h2>
+          <p>Monthly shift schedule for all IT team members</p>
+        </div>
+
+        <!-- Shift code legend: one badge per shift type to explain the color coding -->
+        <div class="shift-legend" id="shiftLegend">
+        <!-- shift-legend: Flex row of colored shift-code badges
+             id="shiftLegend": JS injects one badge per shift type here -->
+          <!-- Legend badges injected by JavaScript -->
+        </div>
+
+        <!-- Roster Calendar Card -->
+        <div class="card table-card">
+          <div class="table-responsive">
+            <table class="data-table roster-table" id="rosterTable">
+            <!-- roster-table: Additional CSS class for the compact roster-specific table styles
+                 id="rosterTable": JS target — both thead columns and tbody rows are injected here -->
+              <thead id="rosterHead">
+              <!-- id="rosterHead": JS injects the 32-column header row (Name + 31 days) here -->
+                <!-- Header injected by JavaScript -->
+              </thead>
+              <tbody id="rosterBody">
+              <!-- id="rosterBody": JS renderRoster() injects one <tr> per team member here -->
+                <!-- Rows injected by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+      <!-- End of Team Roster section -->
+
+    </div>
+    <!-- End of content-wrapper -->
+
+  </div>
+  <!-- End of main-content -->
+
+</div>
+<!-- End of layout wrapper -->
+
+<!-- ── JAVASCRIPT ─────────────────────────────────────────────────────────────
+     Loaded at the bottom of <body> so all DOM elements above exist before the
+     script tries to query them.  async/defer not used here because the script
+     needs the DOM ready and also relies on no other JS libraries at runtime.
+───────────────────────────────────────────────────────────────────────────── -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<!-- url_for('static', ...): Flask Jinja2 helper generates the correct URL to /static/js/main.js
+     Placed last in <body> so the DOM is fully parsed before the script accesses any element by id -->
+
+</body>
+</html>
