@@ -2,6 +2,18 @@
 
 A Flask-based dashboard for monitoring and managing server infrastructure for SMP / SCMS environments. The project provides a clean admin-style UI with live summary cards, server inventory, disk monitoring, team details, and a monthly shift roster.
 
+## Preview
+
+![Server Monitoring Dashboard Preview](docs/dashboard-preview.svg)
+
+## Demo Highlights
+
+- Overview page with server health KPIs
+- Inventory management with search and environment filters
+- Disk monitoring with warning and critical indicators
+- Team details and monthly roster planning
+- Flask-powered API endpoints serving dashboard data dynamically
+
 ## Features
 
 - Dashboard overview with KPI cards
@@ -71,6 +83,14 @@ python app.py
 ```text
 http://127.0.0.1:5000
 ```
+
+## Demo Walkthrough
+
+1. Launch the Flask server with `python app.py`
+2. Open `http://127.0.0.1:5000`
+3. Use the left sidebar to switch between Overview, Server Inventory, Disk Monitoring, Team Details, and Roster
+4. Try the search and environment filters in the inventory table
+5. Review disk utilization severity states from the monitoring section
 
 ## API Endpoints
 
