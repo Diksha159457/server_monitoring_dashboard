@@ -58,6 +58,16 @@ python app.py
 
 Open `http://127.0.0.1:5000` in your browser.
 
+## Deployment
+
+This repository includes a `render.yaml` blueprint for Render.
+
+1. Create a new Blueprint deployment in Render.
+2. Point Render to this GitHub repository.
+3. Render will install dependencies from `requirements.txt` and start the app with Gunicorn.
+
+Once deployed, add the live URL near the top of this README for recruiters.
+
 ## API Endpoints
 
 - `GET /` renders the main dashboard
