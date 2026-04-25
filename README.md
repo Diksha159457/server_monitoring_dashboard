@@ -2,10 +2,12 @@
 
 A Flask-based dashboard for tracking server health, disk utilization, environment inventory, team ownership, and shift planning. The project is built as a polished admin-style interface backed by lightweight JSON APIs, making it a good starting point for infrastructure monitoring demos and operations dashboards.
 
+## 🔗 Live Demo
+(https://server-monitoring-dashboard-dbwz.onrender.com)
 ## Preview
 
-![Server Monitoring Dashboard Preview](docs/dashboard-preview.svg)
-
+![Server Monitoring Dashboard Preview](docs/dashboard-preview.svg]
+> ⚠️ Hosted on Render free tier — may take 30–60 seconds to wake up on first visit.
 ## Highlights
 
 - KPI summary cards for infrastructure status at a glance
