@@ -3,4 +3,4 @@
 
 flask>=3.0.0   # Flask: the core Python web framework (routes, templates, static files, dev server)
 gunicorn>=21.2.0
-pathlib >=2.0.0  # pathlib: for handling file paths in a cross-platform way (used to locate data.json reliably)
+# Gunicorn: production WSGI server for running the Flask app on Render.com (not needed for local development)
