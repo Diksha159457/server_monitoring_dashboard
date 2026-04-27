@@ -561,6 +561,14 @@ function toast(msg, type = 'success') {  // Shows a notification toast in the bo
 document.querySelectorAll('.modal-overlay').forEach(el => {
   el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });  // Only triggers if the click target is the overlay itself (not a child element inside the modal)
 });
+
+
+  // Placeholder to prevent the "ReferenceError" if you don't have voice features yet
+  function toggleRecording() {
+      console.log("Voice recording feature not yet implemented.");
+      alert("Voice commands are coming soon!");
+  }
+
 </script>
 </body>
 </html>

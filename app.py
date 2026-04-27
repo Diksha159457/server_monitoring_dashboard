@@ -51,13 +51,21 @@ WEEKDAYS    = ["F","S","S","M","T","W","T","F","S","S","M","T","W","T","F","S","
 
 # ── Data persistence helpers ───────────────────────────────────────────────────
 
-def load_data():  # Called by every route that needs data — always reads the latest state from disk so edits made in admin are reflected immediately
-    if DATA_FILE.exists():  # Checks whether data.json has already been created on this server
-        return json.loads(DATA_FILE.read_text(encoding="utf-8"))  # Reads the file as a text string and parses it into a Python dictionary
-    data = copy.deepcopy(DEFAULT_DATA)  # First run: no data.json yet, so deep-copy DEFAULT_DATA to avoid mutating the original constant
-    save_data(data)  # Writes the default data to disk so all future calls can load it
-    return data  # Returns the freshly initialised data dictionary
-
+def load_data():
+    try:
+        if DATA_FILE.exists():
+            # Use encoding to ensure it works on Render's Linux environment
+            content = DATA_FILE.read_text(encoding="utf-8")
+            if content.strip(): # Ensure the file isn't empty
+                return json.loads(content)
+        
+        # If file doesn't exist or is empty, use default
+        data = copy.deepcopy(DEFAULT_DATA)
+        save_data(data)
+        return data
+    except Exception as e:
+        print(f"Error loading data: {e}")
+        return copy.deepcopy(DEFAULT_DATA)
 def save_data(data):  # Called after every create, update, or delete operation to persist the change
     DATA_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")  # Serialises the Python dictionary to a pretty-printed JSON string and overwrites data.json completely
 
@@ -87,11 +95,11 @@ def get_summary(data):  # Calculates the five KPI numbers displayed as stat card
     disk = data["disk"]       # Local alias for the disk usage list
     team = data["team"]       # Local alias for the team members list
     return {
-        "active":   sum(1 for s in inv  if s["status"] == "Active"),    # Counts every server whose status field equals "Active"
-        "warning":  sum(1 for s in inv  if s["status"] == "Warning"),   # Counts every server whose status field equals "Warning"
-        "inactive": sum(1 for s in inv  if s["status"] == "Inactive"),  # Counts every server whose status field equals "Inactive"
-        "highDisk": sum(1 for d in disk if d["pct"] >= 85),             # Counts servers at Critical disk usage (≥85%)
-        "teamSize": len(team),                                           # Total number of IT personnel in the team list
+        "total": len(inv), # Added this to match your HTML 'st-total'
+        "active": sum(1 for s in inv if s["status"] == "Active"),
+        "warning": sum(1 for s in inv if s["status"] == "Warning"),
+        "inactive": sum(1 for s in inv if s["status"] == "Inactive"),
+        "teamSize": len(data["team"])
     }
 
 # ── Read routes ────────────────────────────────────────────────────────────────
@@ -102,7 +110,7 @@ def index():  # View function that serves the main dashboard HTML page
     return render_template("index.html", now=now)  # Renders templates/index.html and injects the formatted time as the template variable {{ now }}
 
 @app.route("/admin")  # Registers the URL "/admin" — accessible at yoursite.onrender.com/admin
-def admin():  # View function that serves the admin panel page
+def admin_route():  # View function that serves the admin panel page
     return render_template("admin.html")  # Renders templates/admin.html — the full CRUD interface for managing servers and team members
 
 @app.route("/api/summary")  # Registers GET /api/summary — the JavaScript on the dashboard calls this to populate the five stat cards

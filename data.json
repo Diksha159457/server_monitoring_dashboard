@@ -1,0 +1,280 @@
+{
+  "inventory": [
+    {
+      "id": 1,
+      "team": "SMP",
+      "app": "AppServer-01",
+      "ip": "192.168.1.10",
+      "hostname": "smp-app01",
+      "env": "Production",
+      "status": "Active",
+      "osType": "Linux RHEL",
+      "osVer": "8.8",
+      "tech": "Java",
+      "category": "App",
+      "memory": "16 GB",
+      "cpu": 8,
+      "hw": "Physical"
+    },
+    {
+      "id": 2,
+      "team": "SMP",
+      "app": "AppServer-02",
+      "ip": "192.168.1.11",
+      "hostname": "smp-app02",
+      "env": "Production",
+      "status": "Active",
+      "osType": "Linux RHEL",
+      "osVer": "8.8",
+      "tech": "Java",
+      "category": "App",
+      "memory": "32 GB",
+      "cpu": 16,
+      "hw": "Physical"
+    },
+    {
+      "id": 3,
+      "team": "SMP",
+      "app": "DB-Primary",
+      "ip": "192.168.1.20",
+      "hostname": "smp-db01",
+      "env": "Production",
+      "status": "Active",
+      "osType": "Linux RHEL",
+      "osVer": "8.8",
+      "tech": "Oracle",
+      "category": "DB",
+      "memory": "32 GB",
+      "cpu": 16,
+      "hw": "Physical"
+    },
+    {
+      "id": 4,
+      "team": "SMP",
+      "app": "WebServer-01",
+      "ip": "192.168.1.30",
+      "hostname": "smp-web01",
+      "env": "Production",
+      "status": "Warning",
+      "osType": "Linux RHEL",
+      "osVer": "8.8",
+      "tech": "Nginx",
+      "category": "Web",
+      "memory": "8 GB",
+      "cpu": 4,
+      "hw": "VM"
+    },
+    {
+      "id": 5,
+      "team": "SCMS",
+      "app": "SCMS-App01",
+      "ip": "192.168.2.10",
+      "hostname": "scms-app01",
+      "env": "UAT",
+      "status": "Active",
+      "osType": "Windows",
+      "osVer": "2019",
+      "tech": ".NET",
+      "category": "App",
+      "memory": "8 GB",
+      "cpu": 4,
+      "hw": "VM"
+    },
+    {
+      "id": 6,
+      "team": "SCMS",
+      "app": "SCMS-DB01",
+      "ip": "192.168.2.20",
+      "hostname": "scms-db01",
+      "env": "UAT",
+      "status": "Active",
+      "osType": "Windows",
+      "osVer": "2019",
+      "tech": "MSSQL",
+      "category": "DB",
+      "memory": "16 GB",
+      "cpu": 8,
+      "hw": "VM"
+    },
+    {
+      "id": 7,
+      "team": "SMP",
+      "app": "DR-Server-01",
+      "ip": "192.168.3.10",
+      "hostname": "smp-dr01",
+      "env": "DR",
+      "status": "Inactive",
+      "osType": "Linux RHEL",
+      "osVer": "8.8",
+      "tech": "Java",
+      "category": "App",
+      "memory": "16 GB",
+      "cpu": 8,
+      "hw": "Physical"
+    },
+    {
+      "id": 8,
+      "team": "SCMS",
+      "app": "Dev-Server",
+      "ip": "192.168.4.10",
+      "hostname": "scms-dev01",
+      "env": "Dev",
+      "status": "Active",
+      "osType": "Linux RHEL",
+      "osVer": "9.0",
+      "tech": "Node.js",
+      "category": "App",
+      "memory": "4 GB",
+      "cpu": 2,
+      "hw": "VM"
+    }
+  ],
+  "disk": [
+    {
+      "hostname": "smp-app01",
+      "total": 500,
+      "used": 310,
+      "avail": 190,
+      "pct": 62
+    },
+    {
+      "hostname": "smp-app02",
+      "total": 500,
+      "used": 420,
+      "avail": 80,
+      "pct": 84
+    },
+    {
+      "hostname": "smp-db01",
+      "total": 2000,
+      "used": 1450,
+      "avail": 550,
+      "pct": 73
+    },
+    {
+      "hostname": "smp-web01",
+      "total": 200,
+      "used": 178,
+      "avail": 22,
+      "pct": 89
+    },
+    {
+      "hostname": "scms-app01",
+      "total": 300,
+      "used": 145,
+      "avail": 155,
+      "pct": 48
+    },
+    {
+      "hostname": "scms-db01",
+      "total": 1000,
+      "used": 480,
+      "avail": 520,
+      "pct": 48
+    },
+    {
+      "hostname": "smp-dr01",
+      "total": 500,
+      "used": 100,
+      "avail": 400,
+      "pct": 20
+    },
+    {
+      "hostname": "scms-dev01",
+      "total": 100,
+      "used": 38,
+      "avail": 62,
+      "pct": 38
+    }
+  ],
+  "team": [
+    {
+      "id": "EMP001",
+      "name": "Sandeep Kumar",
+      "doj": "2020-06-01",
+      "project": "SMP",
+      "contact": "9876543210",
+      "email": "sandeep@smp.com"
+    },
+    {
+      "id": "EMP002",
+      "name": "Navnidhi Singh",
+      "doj": "2022-08-15",
+      "project": "SMP",
+      "contact": "9876543211",
+      "email": "navnidhi@smp.com"
+    },
+    {
+      "id": "EMP003",
+      "name": "Smriti Singh",
+      "doj": "2022-08-15",
+      "project": "SMP",
+      "contact": "9876543212",
+      "email": "smriti@smp.com"
+    },
+    {
+      "id": "EMP004",
+      "name": "Simran",
+      "doj": "2022-09-01",
+      "project": "SCMS",
+      "contact": "9876543213",
+      "email": "simran@scms.com"
+    },
+    {
+      "id": "EMP005",
+      "name": "Diksha Shahi",
+      "doj": "2022-09-01",
+      "project": "SCMS",
+      "contact": "9876543214",
+      "email": "diksha@scms.com"
+    },
+    {
+      "id": "EMP006",
+      "name": "Samy Raj",
+      "doj": "2019-03-10",
+      "project": "SMP",
+      "contact": "9876543215",
+      "email": "samy@smp.com"
+    },
+    {
+      "id": "EMP007",
+      "name": "Aaditya Sharma",
+      "doj": "2021-11-20",
+      "project": "SMP",
+      "contact": "9876543216",
+      "email": "aaditya@smp.com"
+    },
+    {
+      "id": "EMP008",
+      "name": "Armaan Khan",
+      "doj": "2023-01-05",
+      "project": "SCMS",
+      "contact": "9876543217",
+      "email": "armaan@scms.com"
+    },
+    {
+      "id": "EMP009",
+      "name": "Pratyush Verma",
+      "doj": "2023-03-15",
+      "project": "SMP",
+      "contact": "9876543218",
+      "email": "pratyush@smp.com"
+    },
+    {
+      "id": "EMP010",
+      "name": "Avanish Tiwari",
+      "doj": "2021-07-22",
+      "project": "SCMS",
+      "contact": "9876543219",
+      "email": "avanish@scms.com"
+    },
+    {
+      "id": "EMP011",
+      "name": "Prabhat Mishra",
+      "doj": "2020-12-01",
+      "project": "SMP",
+      "contact": "9876543220",
+      "email": "prabhat@smp.com"
+    }
+  ]
+}
