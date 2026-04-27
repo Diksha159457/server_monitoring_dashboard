@@ -1,0 +1,566 @@
+<!DOCTYPE html>  <!-- Declares this as an HTML5 document -->
+<html lang="en">  <!-- Root HTML element; lang="en" tells browsers and screen readers the page is in English -->
+<head>
+<meta charset="UTF-8"/>  <!-- Sets character encoding to UTF-8 so special characters render correctly -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>  <!-- Makes the page responsive — prevents mobile browsers from zooming out to show a desktop-sized layout -->
+<title>Admin Panel — ServerWatch</title>  <!-- Text shown in the browser tab -->
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>  <!-- Loads two Google Fonts: JetBrains Mono (used for IDs, code-like values) and Syne (used for all headings and body text) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>  <!-- Loads Font Awesome icon library — provides all the icons (server, user, trash, pen, etc.) used throughout the page -->
+<style>
+  /* ── CSS custom properties (design tokens) — change these to retheme the entire page ── */
+  :root {
+    --bg:       #0a0e17;  /* Page background — deep navy-black */
+    --surface:  #111827;  /* Card and sidebar background — slightly lighter than bg */
+    --surface2: #1a2236;  /* Hover and table header background — one step lighter than surface */
+    --border:   #1f2e47;  /* Border color for all cards, tables, and inputs */
+    --accent:   #3b82f6;  /* Primary blue — used for active nav, buttons, server section */
+    --accent2:  #06b6d4;  /* Cyan — used for team section and employee ID values */
+    --danger:   #ef4444;  /* Red — used for delete buttons and critical alerts */
+    --success:  #10b981;  /* Green — used for Active status badges and success toasts */
+    --warning:  #f59e0b;  /* Amber — used for Warning status badges */
+    --text:     #e2e8f0;  /* Primary text color — light grey-white */
+    --muted:    #64748b;  /* Secondary text color — used for labels, placeholders, nav items */
+    --radius:   10px;     /* Standard border-radius applied to cards and tables */
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }  /* Reset: makes all elements size themselves including padding/border, and removes browser default margins */
+
+  /* ── Page layout: sidebar + main content side by side ── */
+  .layout { display: flex; min-height: 100vh; }  /* Flexbox row so sidebar and main sit next to each other; min-height fills the full viewport */
+
+  /* ── Left sidebar ── */
+  .sidebar {
+    width: 220px; background: var(--surface); border-right: 1px solid var(--border);  /* Fixed 220px wide; dark surface background; right border separates it from main */
+    display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0;  /* Column flex so logo, nav items, and back link stack vertically; flex-shrink:0 prevents it from collapsing */
+    position: sticky; top: 0; height: 100vh;  /* Sticks to the top of the viewport so the sidebar doesn't scroll away */
+  }
+  .sidebar-logo {
+    padding: 0 20px 24px; border-bottom: 1px solid var(--border);  /* Bottom padding and border visually separates the logo from the nav links */
+    display: flex; align-items: center; gap: 10px;  /* Icon and text sit side by side with a 10px gap */
+  }
+  .sidebar-logo .icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; font-size: 14px; }  /* Blue rounded square that holds the gear emoji logo */
+  .sidebar-logo .title { font-size: 14px; font-weight: 800; letter-spacing: 0.05em; }  /* "ADMIN" text in bold */
+  .sidebar-logo .sub { font-size: 10px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }  /* "ServerWatch" subtitle in monospace */
+  .nav-section { padding: 16px 12px 8px; font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }  /* "MANAGE" category label above the nav links */
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 20px;  /* Icon and label sit side by side with consistent padding */
+    cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted);  /* Muted grey by default — active state overrides this */
+    transition: all 0.15s; border-left: 3px solid transparent; text-decoration: none;  /* Smooth hover transition; transparent left border becomes colored when active */
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }  /* Hover: slightly lighter background and white text */
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(59,130,246,0.08); }  /* Active state: blue text, blue left border, and a subtle blue tint background */
+  .nav-item i { width: 16px; text-align: center; font-size: 13px; }  /* Fixed icon width ensures text labels align regardless of icon size */
+  .back-link { margin-top: auto; padding: 16px 20px; border-top: 1px solid var(--border); }  /* Pushes the "Back to Dashboard" link to the bottom of the sidebar */
+
+  /* ── Main content area ── */
+  .main { flex: 1; padding: 32px; overflow-y: auto; }  /* Takes all remaining horizontal space; 32px padding on all sides; scrollable */
+  .page-header { margin-bottom: 28px; }  /* Space below the page title before the stats bar */
+  .page-header h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }  /* Large bold "Admin Panel" heading */
+  .page-header p { color: var(--muted); font-size: 13px; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }  /* Monospace subtitle beneath the heading */
+  .section { display: none; }  /* All sections hidden by default — JavaScript shows the active one */
+  .section.active { display: block; }  /* Only the currently selected section is visible */
+
+  /* ── Toolbar: section heading + Add button ── */
+  .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }  /* Places heading on the left and Add button on the right */
+  .toolbar h2 { font-size: 16px; font-weight: 700; }  /* Section heading inside the toolbar */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px;  /* Icon and label sit side by side inside the button */
+    border-radius: var(--radius); border: none; cursor: pointer;  /* Rounded corners; no default browser border */
+    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;  /* Matches the page's Syne font */
+    transition: all 0.15s; letter-spacing: 0.01em;  /* Smooth color transition on hover */
+  }
+  .btn-primary { background: var(--accent); color: #fff; }  /* Solid blue — used for Add Server / Add Member / Save buttons */
+  .btn-primary:hover { background: #2563eb; }  /* Darker blue on hover */
+  .btn-danger  { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }  /* Transparent red with red border — used for Delete buttons in the table */
+  .btn-danger:hover { background: rgba(239,68,68,0.25); }  /* Slightly more opaque on hover */
+  .btn-edit    { background: rgba(59,130,246,0.12); color: var(--accent); border: 1px solid rgba(59,130,246,0.25); }  /* Transparent blue with blue border — used for Edit buttons in the table */
+  .btn-edit:hover { background: rgba(59,130,246,0.22); }  /* Slightly more opaque on hover */
+  .btn-sm { padding: 6px 11px; font-size: 12px; }  /* Smaller variant of .btn used inside table action cells */
+
+  /* ── Data table ── */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }  /* Card container for the table; overflow:hidden clips row backgrounds to the rounded corners */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }  /* Full-width table; collapse removes double borders between cells */
+  thead th { background: var(--surface2); padding: 11px 14px; text-align: left; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-family: 'JetBrains Mono', monospace; }  /* Column headers: uppercase monospace labels with muted color */
+  tbody tr { border-top: 1px solid var(--border); transition: background 0.12s; }  /* Horizontal divider between rows; smooth background transition on hover */
+  tbody tr:hover { background: var(--surface2); }  /* Subtle highlight when hovering over a row */
+  tbody td { padding: 11px 14px; vertical-align: middle; }  /* Cell padding; middle alignment keeps content centered vertically */
+  .actions { display: flex; gap: 6px; }  /* Flex row so Edit and Delete buttons sit side by side with a 6px gap */
+  .badge {
+    display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 20px;  /* Pill shape for status labels */
+    font-size: 11px; font-weight: 700; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em;  /* Monospace bold text inside the badge */
+  }
+  .badge-active   { background: rgba(16,185,129,0.15); color: var(--success); }  /* Green badge for Active status */
+  .badge-warning  { background: rgba(245,158,11,0.15);  color: var(--warning); }  /* Amber badge for Warning status / SCMS project */
+  .badge-inactive { background: rgba(100,116,139,0.15); color: var(--muted);   }  /* Grey badge for Inactive status */
+  .badge-critical { background: rgba(239,68,68,0.15);   color: var(--danger);  }  /* Red badge for Critical disk usage */
+  .badge-normal   { background: rgba(16,185,129,0.15);  color: var(--success); }  /* Green badge for Normal disk usage */
+
+  /* ── Modal overlay (the dark backdrop + centered modal box) ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);  /* Hidden by default; covers full viewport with semi-transparent black when open */
+    z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(4px);  /* z-index above everything; centers the modal box; blurs the page behind it */
+  }
+  .modal-overlay.open { display: flex; }  /* JavaScript adds/removes the "open" class to show or hide the modal */
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;  /* Dark card with rounded corners */
+    width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto;  /* Responsive width capped at 560px; scrollable if form exceeds 90% of screen height */
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5); animation: slideUp 0.2s ease;  /* Deep shadow for depth; slideUp animation makes the modal appear smoothly */
+  }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }  /* Defines the slide-up entrance animation: starts 20px below and invisible, ends in place and fully visible */
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;  /* Title on the left, close button on the right */
+    padding: 20px 24px; border-bottom: 1px solid var(--border);  /* Bottom border separates header from form body */
+  }
+  .modal-header h3 { font-size: 16px; font-weight: 800; }  /* Modal title text */
+  .modal-close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 4px; }  /* Invisible background close button (×) in the top-right corner */
+  .modal-close:hover { color: var(--text); }  /* Close button turns white on hover */
+  .modal-body { padding: 24px; }  /* Inner padding around the form fields */
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }  /* Cancel + Save buttons sit right-aligned with a top border separating them from the form */
+
+  /* ── Form layout inside the modal ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }  /* Two-column grid so form fields sit in pairs side by side */
+  .form-group { display: flex; flex-direction: column; gap: 6px; }  /* Label above input with a 6px gap */
+  .form-group.full { grid-column: 1 / -1; }  /* Makes this field span both columns (e.g. Full Name in the member form) */
+  label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-family: 'JetBrains Mono', monospace; }  /* Small uppercase monospace label above each input */
+  input, select {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;  /* Dark input with subtle border */
+    color: var(--text); padding: 9px 12px; font-size: 13px; font-family: 'Syne', sans-serif;  /* White text; Syne font matches the rest of the page */
+    outline: none; transition: border-color 0.15s;  /* Removes default browser outline; smooth border transition on focus */
+  }
+  input:focus, select:focus { border-color: var(--accent); }  /* Focused input gets a blue border highlight */
+  select option { background: var(--surface2); }  /* Dropdown options use the same dark surface color */
+
+  /* ── Toast notification (bottom-right corner popup) ── */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 200;  /* Fixed to bottom-right corner, above all other elements */
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;  /* Dark card style */
+    padding: 12px 18px; font-size: 13px; font-weight: 600;  /* Compact padding; bold text */
+    display: flex; align-items: center; gap: 10px;  /* Icon and message sit side by side */
+    transform: translateY(80px); opacity: 0; transition: all 0.25s ease;  /* Hidden below screen by default; slides up when .show is added */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);  /* Shadow for depth */
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }  /* Slides up to visible position when JavaScript adds the .show class */
+  #toast.success { border-color: var(--success); color: var(--success); }  /* Green border and text for success messages */
+  #toast.error   { border-color: var(--danger);  color: var(--danger);  }  /* Red border and text for error messages */
+
+  /* ── Stats bar (five KPI cards at the top of the page) ── */
+  .stats-bar { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }  /* Horizontal row of stat cards; wraps to next line on narrow screens */
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);  /* Dark card style */
+    padding: 14px 20px; flex: 1; min-width: 120px;  /* Each card grows equally; minimum 120px wide before wrapping */
+  }
+  .stat-card .val { font-size: 26px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }  /* Large bold number */
+  .stat-card .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.07em; }  /* Small uppercase label below the number */
+  .stat-card.c-blue  .val { color: var(--accent); }   /* Blue number for Total Servers */
+  .stat-card.c-green .val { color: var(--success); }  /* Green number for Active count */
+  .stat-card.c-red   .val { color: var(--danger); }   /* Red number for Inactive count */
+  .stat-card.c-amber .val { color: var(--warning); }  /* Amber number for Warning count */
+  .stat-card.c-cyan  .val { color: var(--accent2); }  /* Cyan number for Team Members count */
+
+  /* ── Confirmation dialog (shown before a delete is executed) ── */
+  .confirm-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75);  /* Covers the full screen with a dark overlay; hidden by default */
+    z-index: 150; align-items: center; justify-content: center;  /* z-index above the modal (100) but below toast (200); centers the dialog box */
+  }
+  .confirm-overlay.open { display: flex; }  /* JavaScript adds .open to show the dialog */
+  .confirm-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;  /* Dark card for the dialog */
+    padding: 28px; max-width: 360px; width: 90%; text-align: center;  /* Centered text; responsive width */
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);  /* Deep shadow for visual elevation */
+  }
+  .confirm-box .icon { font-size: 36px; color: var(--danger); margin-bottom: 12px; }  /* Large red warning triangle icon */
+  .confirm-box h4 { font-size: 16px; font-weight: 800; margin-bottom: 8px; }  /* "Confirm Delete" heading */
+  .confirm-box p { font-size: 13px; color: var(--muted); margin-bottom: 20px; }  /* Description text telling the user what will be deleted */
+  .confirm-btns { display: flex; gap: 10px; justify-content: center; }  /* Cancel and Delete buttons centered side by side */
+  .btn-cancel { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }  /* Neutral grey Cancel button */
+  .btn-cancel:hover { background: var(--border); }  /* Slightly darker on hover */
+
+  /* ── Empty state placeholder (shown when a table has no data) ── */
+  .empty { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }  /* Centred and padded placeholder text */
+  .empty i { font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.4; }  /* Large faded icon above the "No data" message */
+</style>
+</head>
+<body>
+<div class="layout">  <!-- Outer flex container that holds the sidebar and main area side by side -->
+
+  <!-- ── Left Sidebar ────────────────────────────────── -->
+  <aside class="sidebar">  <!-- Semantic aside element for the navigation sidebar -->
+    <div class="sidebar-logo">  <!-- Logo and app name at the top of the sidebar -->
+      <div class="icon">⚙️</div>  <!-- Gear emoji in a blue rounded square as the admin logo -->
+      <div><div class="title">ADMIN</div><div class="sub">ServerWatch</div></div>  <!-- Two-line text: "ADMIN" in bold, "ServerWatch" as a monospace subtitle -->
+    </div>
+    <div class="nav-section">Manage</div>  <!-- Non-clickable category label above the nav links -->
+    <a class="nav-item active" data-section="servers" href="#" onclick="showSection('servers',this)">
+      <!-- Servers nav link: active by default (servers section shown first); onclick calls showSection() to switch views -->
+      <i class="fas fa-server"></i> Servers  <!-- Font Awesome server icon + label -->
+    </a>
+    <a class="nav-item" data-section="team" href="#" onclick="showSection('team',this)">
+      <!-- Team Members nav link: inactive by default; clicking switches to the team section -->
+      <i class="fas fa-users"></i> Team Members  <!-- Font Awesome users icon + label -->
+    </a>
+    <div class="back-link">  <!-- Wrapper pushed to the bottom of the sidebar via margin-top: auto -->
+      <a class="nav-item" href="/" style="padding:10px 0;">  <!-- Link back to the main dashboard -->
+        <i class="fas fa-arrow-left"></i> Back to Dashboard  <!-- Left arrow icon + label -->
+      </a>
+    </div>
+  </aside>
+
+  <!-- ── Main Content Area ────────────────────────────── -->
+  <main class="main">  <!-- Main content: takes all remaining horizontal space -->
+    <div class="page-header">  <!-- Page title block -->
+      <h1>Admin Panel</h1>  <!-- Primary heading -->
+      <p>// Add · Edit · Delete servers and team members</p>  <!-- Monospace subtitle explaining the page's purpose -->
+    </div>
+
+    <!-- Stats Bar: five KPI cards pulled from /api/summary via JavaScript -->
+    <div class="stats-bar" id="statsBar">
+      <div class="stat-card c-blue"><div class="val" id="st-total">—</div><div class="lbl">Total Servers</div></div>   <!-- Total server count; blue value -->
+      <div class="stat-card c-green"><div class="val" id="st-active">—</div><div class="lbl">Active</div></div>        <!-- Active servers; green value -->
+      <div class="stat-card c-amber"><div class="val" id="st-warning">—</div><div class="lbl">Warning</div></div>      <!-- Warning servers; amber value -->
+      <div class="stat-card c-red"><div class="val" id="st-inactive">—</div><div class="lbl">Inactive</div></div>      <!-- Inactive servers; red value -->
+      <div class="stat-card c-cyan"><div class="val" id="st-team">—</div><div class="lbl">Team Members</div></div>     <!-- Team size; cyan value -->
+    </div>
+
+    <!-- ── Servers Section ──────────────────────────── -->
+    <div class="section active" id="section-servers">  <!-- Active by default — shown when the page loads -->
+      <div class="toolbar">  <!-- Row with section title and Add Server button -->
+        <h2><i class="fas fa-server" style="color:var(--accent);margin-right:8px"></i>Server Inventory</h2>  <!-- Section heading with blue server icon -->
+        <button class="btn btn-primary" onclick="openServerModal()"><i class="fas fa-plus"></i> Add Server</button>  <!-- Opens the Add Server modal when clicked -->
+      </div>
+      <div class="table-wrap">  <!-- Card wrapper that clips the table to rounded corners -->
+        <table>
+          <thead>
+            <tr>
+              <!-- Column headers for the server table -->
+              <th>ID</th><th>Hostname</th><th>Team</th><th>Application</th>
+              <th>Environment</th><th>Status</th><th>Tech</th><th>HW</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="serverTableBody"><tr><td colspan="9" class="empty"><i class="fas fa-spinner fa-spin"></i>Loading…</td></tr></tbody>
+          <!-- tbody is populated by loadServers() in JavaScript; shows a spinning loader until data arrives -->
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Team Section ──────────────────────────────── -->
+    <div class="section" id="section-team">  <!-- Hidden by default; shown when user clicks "Team Members" in the sidebar -->
+      <div class="toolbar">  <!-- Row with section title and Add Member button -->
+        <h2><i class="fas fa-users" style="color:var(--accent2);margin-right:8px"></i>Team Members</h2>  <!-- Section heading with cyan users icon -->
+        <button class="btn btn-primary" onclick="openMemberModal()"><i class="fas fa-user-plus"></i> Add Member</button>  <!-- Opens the Add Member modal when clicked -->
+      </div>
+      <div class="table-wrap">  <!-- Card wrapper for the team table -->
+        <table>
+          <thead>
+            <tr>
+              <!-- Column headers for the team table -->
+              <th>Emp ID</th><th>Name</th><th>Date of Joining</th><th>Project</th><th>Contact</th><th>Email</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="teamTableBody"><tr><td colspan="7" class="empty"><i class="fas fa-spinner fa-spin"></i>Loading…</td></tr></tbody>
+          <!-- tbody is populated by loadTeam() in JavaScript; shows a spinning loader until data arrives -->
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ── Add / Edit Server Modal ───────────────────────────────────────────────── -->
+<div class="modal-overlay" id="serverModal">  <!-- Overlay + modal container; hidden by default; .open class shows it -->
+  <div class="modal">  <!-- The white-ish card that contains the form -->
+    <div class="modal-header">
+      <h3 id="serverModalTitle">Add Server</h3>  <!-- Title changes to "Edit Server" when editing an existing record -->
+      <button class="modal-close" onclick="closeModal('serverModal')"><i class="fas fa-times"></i></button>  <!-- × close button in the top-right corner -->
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">  <!-- Two-column grid layout for the form fields -->
+        <div class="form-group"><label>Application Name</label><input id="s-app" placeholder="AppServer-01"/></div>       <!-- Name of the application/server -->
+        <div class="form-group"><label>Hostname</label><input id="s-hostname" placeholder="smp-app01"/></div>             <!-- DNS hostname used to match disk records -->
+        <div class="form-group"><label>IP Address</label><input id="s-ip" placeholder="192.168.1.10"/></div>              <!-- Server's static IPv4 address -->
+        <div class="form-group"><label>Team</label>
+          <select id="s-team"><option>SMP</option><option>SCMS</option><option>Infra</option><option>DevOps</option></select>  <!-- Dropdown: which team owns this server -->
+        </div>
+        <div class="form-group"><label>Environment</label>
+          <select id="s-env"><option>Production</option><option>UAT</option><option>Dev</option><option>DR</option></select>  <!-- Dropdown: deployment environment -->
+        </div>
+        <div class="form-group"><label>Status</label>
+          <select id="s-status"><option>Active</option><option>Warning</option><option>Inactive</option></select>  <!-- Dropdown: current operational state; drives the badge color in the table -->
+        </div>
+        <div class="form-group"><label>OS Type</label>
+          <select id="s-osType"><option>Linux RHEL</option><option>Windows</option><option>Ubuntu</option><option>CentOS</option></select>  <!-- Dropdown: operating system family -->
+        </div>
+        <div class="form-group"><label>OS Version</label><input id="s-osVer" placeholder="8.8"/></div>  <!-- OS version string (e.g. "8.8" for RHEL, "2019" for Windows Server) -->
+        <div class="form-group"><label>Technology</label>
+          <select id="s-tech"><option>Java</option><option>.NET</option><option>Node.js</option><option>Python</option><option>Oracle</option><option>MSSQL</option><option>MySQL</option><option>Nginx</option><option>Apache</option></select>  <!-- Dropdown: primary technology stack running on this server -->
+        </div>
+        <div class="form-group"><label>Category</label>
+          <select id="s-category"><option>App</option><option>DB</option><option>Web</option><option>Cache</option></select>  <!-- Dropdown: what kind of server this is -->
+        </div>
+        <div class="form-group"><label>Memory</label><input id="s-memory" placeholder="16 GB"/></div>   <!-- RAM capacity as a free-text string (e.g. "16 GB") -->
+        <div class="form-group"><label>CPU Cores</label><input id="s-cpu" type="number" placeholder="8"/></div>  <!-- Number of CPU cores; numeric input -->
+        <div class="form-group"><label>HW Type</label>
+          <select id="s-hw"><option>Physical</option><option>VM</option><option>Container</option></select>  <!-- Dropdown: physical hardware or virtual machine -->
+        </div>
+        <div class="form-group"><label>Disk Total (GB)</label><input id="s-diskTotal" type="number" placeholder="500"/></div>  <!-- Total disk capacity in GB; used to create/update the disk record -->
+        <div class="form-group"><label>Disk Used (GB)</label><input id="s-diskUsed" type="number" placeholder="200"/></div>    <!-- Disk space currently used in GB; percentage is calculated automatically -->
+      </div>
+    </div>
+    <div class="modal-footer">  <!-- Action buttons at the bottom of the modal -->
+      <button class="btn btn-cancel" onclick="closeModal('serverModal')">Cancel</button>  <!-- Dismisses the modal without saving -->
+      <button class="btn btn-primary" onclick="saveServer()"><i class="fas fa-save"></i> Save</button>  <!-- Calls saveServer() which POSTs or PUTs to the Flask API -->
+    </div>
+  </div>
+</div>
+
+<!-- ── Add / Edit Team Member Modal ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="memberModal">  <!-- Overlay + modal container for team member form; hidden by default -->
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="memberModalTitle">Add Team Member</h3>  <!-- Title changes to "Edit Member" when editing an existing record -->
+      <button class="modal-close" onclick="closeModal('memberModal')"><i class="fas fa-times"></i></button>  <!-- × close button -->
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">  <!-- Two-column grid for the member form -->
+        <div class="form-group full"><label>Full Name</label><input id="m-name" placeholder="Sandeep Kumar"/></div>  <!-- Full name spans both columns (form-group.full) -->
+        <div class="form-group"><label>Date of Joining</label><input id="m-doj" type="date"/></div>   <!-- Date picker for joining date -->
+        <div class="form-group"><label>Project</label>
+          <select id="m-project"><option>SMP</option><option>SCMS</option><option>Infra</option><option>DevOps</option></select>  <!-- Dropdown: which project/team this employee belongs to -->
+        </div>
+        <div class="form-group"><label>Contact Number</label><input id="m-contact" placeholder="9876543210"/></div>  <!-- 10-digit mobile number -->
+        <div class="form-group"><label>Email</label><input id="m-email" placeholder="name@smp.com"/></div>           <!-- Work email address -->
+      </div>
+    </div>
+    <div class="modal-footer">  <!-- Action buttons -->
+      <button class="btn btn-cancel" onclick="closeModal('memberModal')">Cancel</button>  <!-- Dismisses the modal without saving -->
+      <button class="btn btn-primary" onclick="saveMember()"><i class="fas fa-save"></i> Save</button>  <!-- Calls saveMember() which POSTs or PUTs to the Flask API -->
+    </div>
+  </div>
+</div>
+
+<!-- ── Delete Confirmation Dialog ──────────────────────────────────────────── -->
+<div class="confirm-overlay" id="confirmDialog">  <!-- Full-screen overlay for the delete confirmation; hidden by default -->
+  <div class="confirm-box">  <!-- Small centered dialog card -->
+    <div class="icon"><i class="fas fa-triangle-exclamation"></i></div>  <!-- Large red warning triangle icon -->
+    <h4>Confirm Delete</h4>  <!-- Dialog heading -->
+    <p id="confirmMsg">This action cannot be undone.</p>  <!-- Dynamic message set by JavaScript to name the item being deleted -->
+    <div class="confirm-btns">  <!-- Cancel and Delete buttons side by side -->
+      <button class="btn btn-cancel" onclick="closeConfirm()">Cancel</button>  <!-- Closes the dialog without deleting -->
+      <button class="btn btn-danger" id="confirmOkBtn">Delete</button>  <!-- Calls the delete function set by JavaScript when this dialog was opened -->
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification element — text and class injected by the toast() JavaScript function -->
+<div id="toast"></div>
+
+<script>
+// ── Application state ─────────────────────────────────────────────────────────
+let servers = [], team = [];  // In-memory arrays holding the latest server and team data fetched from the API
+let editingServerId = null, editingMemberId = null;  // Tracks which record is being edited (null = adding a new record)
+
+// ── Initialisation ────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {  // Waits for the full HTML to load before running setup code
+  loadAll();   // Fetches server and team data from the API and renders both tables
+  loadStats(); // Fetches summary stats and populates the five KPI stat cards
+});
+
+async function loadAll() {  // Fetches both datasets in parallel using Promise.all for efficiency
+  await Promise.all([loadServers(), loadTeam()]);  // Both fetch calls run simultaneously; waits until both complete
+}
+
+async function loadStats() {  // Fetches /api/summary and updates all five stat card values
+  try {
+    const s = await fetch('/api/summary').then(r => r.json());  // GET /api/summary → parse JSON response into object s
+    document.getElementById('st-total').textContent   = servers.length || '—';  // Total = number of servers currently in the table (or '—' if not loaded yet)
+    document.getElementById('st-active').textContent  = s.active;    // Active count from the summary API
+    document.getElementById('st-warning').textContent = s.warning;   // Warning count from the summary API
+    document.getElementById('st-inactive').textContent= s.inactive;  // Inactive count from the summary API
+    document.getElementById('st-team').textContent    = s.teamSize;  // Team member count from the summary API
+  } catch(e) {}  // Silently ignore errors (e.g. if server is still waking up); UI keeps showing "—"
+}
+
+// ── Section switching (Servers ↔ Team Members) ────────────────────────────────
+function showSection(name, el) {  // Called when a sidebar nav link is clicked; name = "servers" or "team", el = the clicked link element
+  event.preventDefault();  // Prevents the "#" href from scrolling the page to the top
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));  // Hides all sections by removing "active" class
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));  // Removes "active" highlight from all nav links
+  document.getElementById('section-' + name).classList.add('active');  // Shows only the requested section
+  el.classList.add('active');  // Highlights only the clicked nav link
+}
+
+// ── Server table ──────────────────────────────────────────────────────────────
+async function loadServers() {  // Fetches the server list from the API and re-renders the server table
+  servers = await fetch('/api/inventory').then(r => r.json());  // GET /api/inventory → array of server objects stored in `servers`
+  const tbody = document.getElementById('serverTableBody');  // Reference to the table body element we will write rows into
+  if (!servers.length) {  // If the inventory is empty, show a friendly empty state instead of an empty table
+    tbody.innerHTML = '<tr><td colspan="9" class="empty"><i class="fas fa-server"></i>No servers found.</td></tr>';
+    return;  // Exit early — no rows to render
+  }
+  tbody.innerHTML = servers.map(s => `  
+    <tr>
+      <td style="font-family:monospace;color:var(--muted)">#${s.id}</td>      <!-- Server ID in monospace grey -->
+      <td><strong>${s.hostname}</strong></td>                                  <!-- Hostname in bold -->
+      <td>${s.team}</td>                                                       <!-- Owning team -->
+      <td>${s.app}</td>                                                        <!-- Application name -->
+      <td>${s.env}</td>                                                        <!-- Environment (Production/UAT/Dev/DR) -->
+      <td><span class="badge badge-${s.status.toLowerCase()}">${s.status}</span></td>  <!-- Status badge; CSS class derived from status value -->
+      <td>${s.tech}</td>                                                       <!-- Technology stack -->
+      <td>${s.hw}</td>                                                         <!-- Physical or VM -->
+      <td>
+        <div class="actions">
+          <button class="btn btn-edit btn-sm" onclick="editServer(${s.id})"><i class="fas fa-pen"></i></button>       <!-- Edit button: calls editServer(id) -->
+          <button class="btn btn-danger btn-sm" onclick="confirmDeleteServer(${s.id},'${s.hostname}')"><i class="fas fa-trash"></i></button>  <!-- Delete button: opens confirm dialog -->
+        </div>
+      </td>
+    </tr>`).join('');  // map() produces one HTML string per server; join('') concatenates them all into the tbody
+  document.getElementById('st-total').textContent = servers.length;  // Updates the "Total Servers" stat card after table re-renders
+}
+
+function openServerModal(id) {  // Opens the Add/Edit Server modal; id is undefined when adding, or the server's numeric ID when editing
+  editingServerId = id || null;  // Stores the ID being edited so saveServer() knows whether to POST or PUT
+  document.getElementById('serverModalTitle').textContent = id ? 'Edit Server' : 'Add Server';  // Changes modal title based on add/edit mode
+  const fields = ['app','hostname','ip','team','env','status','osType','osVer','tech','category','memory','cpu','hw'];  // All field IDs that map to input/select elements
+  if (id) {  // Edit mode: pre-fill the form with the server's current values
+    const s = servers.find(x => x.id === id);  // Finds the server object in the cached servers array
+    fields.forEach(f => { const el = document.getElementById('s-'+f); if(el) el.value = s[f] || ''; });  // Populates each form field with the server's current value
+    document.getElementById('s-diskTotal').value = '';  // Disk fields left blank in edit mode (optional to update)
+    document.getElementById('s-diskUsed').value  = '';
+  } else {  // Add mode: clear all fields and set default disk values
+    fields.forEach(f => { const el = document.getElementById('s-'+f); if(el) el.value = ''; });  // Clears all form fields
+    document.getElementById('s-diskTotal').value = '500';  // Sensible default disk total
+    document.getElementById('s-diskUsed').value  = '100';  // Sensible default disk used
+  }
+  document.getElementById('serverModal').classList.add('open');  // Shows the modal by adding the "open" class
+}
+function editServer(id) { openServerModal(id); }  // Convenience wrapper called by the Edit button in the table
+
+async function saveServer() {  // Reads the form values and sends a POST (add) or PUT (edit) request to the Flask API
+  const payload = {  // Builds the request body from all form field values
+    app: v('s-app'), hostname: v('s-hostname'), ip: v('s-ip'), team: v('s-team'),  // Basic server identity fields
+    env: v('s-env'), status: v('s-status'), osType: v('s-osType'), osVer: v('s-osVer'),  // Environment and OS fields
+    tech: v('s-tech'), category: v('s-category'), memory: v('s-memory'),  // Tech stack and category fields
+    cpu: parseInt(v('s-cpu')), hw: v('s-hw'),  // CPU must be an integer; HW type is a string
+    diskTotal: parseInt(v('s-diskTotal')||500), diskUsed: parseInt(v('s-diskUsed')||100),  // Disk values default to 500/100 if blank
+  };
+  if (!payload.app || !payload.hostname || !payload.ip) { toast('Fill in required fields', 'error'); return; }  // Basic validation: App Name, Hostname, and IP are required
+  try {
+    if (editingServerId) {  // Edit mode: send a PUT request to update the existing server
+      await fetch(`/api/admin/server/${editingServerId}`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+      toast('Server updated ✓', 'success');  // Show green success toast
+    } else {  // Add mode: send a POST request to create a new server
+      await fetch('/api/admin/server', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+      toast('Server added ✓', 'success');  // Show green success toast
+    }
+    closeModal('serverModal');  // Closes the modal after a successful save
+    await loadServers();  // Refreshes the server table to show the new/updated record
+    await loadStats();    // Refreshes the stat cards (e.g. Active count may have changed)
+  } catch(e) { toast('Error saving server', 'error'); }  // Shows a red error toast if the API call fails
+}
+
+function confirmDeleteServer(id, hostname) {  // Shows the confirmation dialog before deleting a server
+  document.getElementById('confirmMsg').textContent = `Delete server "${hostname}"? This cannot be undone.`;  // Sets the dialog message to include the server's hostname
+  document.getElementById('confirmOkBtn').onclick = async () => {  // Assigns the delete action to the dialog's OK button
+    await fetch(`/api/admin/server/${id}`, {method:'DELETE'});  // Sends DELETE /api/admin/server/{id} to the Flask API
+    closeConfirm();  // Closes the confirmation dialog
+    toast('Server deleted', 'success');  // Shows a green success toast
+    await loadServers(); await loadStats();  // Refreshes the table and stat cards
+  };
+  document.getElementById('confirmDialog').classList.add('open');  // Shows the confirmation dialog
+}
+
+// ── Team table ────────────────────────────────────────────────────────────────
+async function loadTeam() {  // Fetches the team list from the API and re-renders the team table
+  team = await fetch('/api/team').then(r => r.json());  // GET /api/team → array of team member objects stored in `team`
+  const tbody = document.getElementById('teamTableBody');  // Reference to the team table body element
+  if (!team.length) {  // If there are no team members, show an empty state placeholder
+    tbody.innerHTML = '<tr><td colspan="7" class="empty"><i class="fas fa-users"></i>No members found.</td></tr>';
+    return;  // Exit early
+  }
+  tbody.innerHTML = team.map(m => `
+    <tr>
+      <td style="font-family:monospace;color:var(--accent2)">${m.id}</td>  <!-- Employee ID in cyan monospace -->
+      <td><strong>${m.name}</strong></td>                                    <!-- Full name in bold -->
+      <td>${m.doj}</td>                                                      <!-- Date of joining -->
+      <td><span class="badge badge-${m.project==='SMP'?'active':'warning'}">${m.project}</span></td>  <!-- Project badge: green for SMP, amber for SCMS -->
+      <td style="font-family:monospace">${m.contact}</td>                    <!-- Contact number in monospace -->
+      <td style="color:var(--muted)">${m.email}</td>                         <!-- Email in muted grey -->
+      <td>
+        <div class="actions">
+          <button class="btn btn-edit btn-sm" onclick="editMember('${m.id}')"><i class="fas fa-pen"></i></button>       <!-- Edit button: calls editMember(id) -->
+          <button class="btn btn-danger btn-sm" onclick="confirmDeleteMember('${m.id}','${m.name}')"><i class="fas fa-trash"></i></button>  <!-- Delete button: opens confirm dialog -->
+        </div>
+      </td>
+    </tr>`).join('');  // map() produces one row per member; join('') combines them into a single HTML string
+  document.getElementById('st-team').textContent = team.length;  // Updates the "Team Members" stat card
+}
+
+function openMemberModal(id) {  // Opens the Add/Edit Member modal; id is undefined when adding, or the emp_id string when editing
+  editingMemberId = id || null;  // Stores the ID being edited so saveMember() knows whether to POST or PUT
+  document.getElementById('memberModalTitle').textContent = id ? 'Edit Member' : 'Add Team Member';  // Changes modal title
+  if (id) {  // Edit mode: pre-fill the form with the member's current values
+    const m = team.find(x => x.id === id);  // Finds the member in the cached team array
+    document.getElementById('m-name').value    = m.name;     // Pre-fills the name field
+    document.getElementById('m-doj').value     = m.doj;      // Pre-fills the date of joining
+    document.getElementById('m-project').value = m.project;  // Selects the correct project in the dropdown
+    document.getElementById('m-contact').value = m.contact;  // Pre-fills the contact number
+    document.getElementById('m-email').value   = m.email;    // Pre-fills the email address
+  } else {  // Add mode: clear all form fields
+    ['m-name','m-doj','m-contact','m-email'].forEach(id => document.getElementById(id).value = '');  // Clears text inputs
+  }
+  document.getElementById('memberModal').classList.add('open');  // Shows the modal
+}
+function editMember(id) { openMemberModal(id); }  // Convenience wrapper called by the Edit button in the team table
+
+async function saveMember() {  // Reads the form values and sends a POST (add) or PUT (edit) request to the Flask API
+  const payload = {  // Builds the request body from all form field values
+    name: v('m-name'), doj: v('m-doj'), project: v('m-project'),  // Basic identity and project fields
+    contact: v('m-contact'), email: v('m-email'),  // Contact details
+  };
+  if (!payload.name || !payload.doj) { toast('Fill in required fields', 'error'); return; }  // Name and date of joining are required
+  try {
+    if (editingMemberId) {  // Edit mode: send a PUT request to update the existing member
+      await fetch(`/api/admin/member/${editingMemberId}`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+      toast('Member updated ✓', 'success');  // Show green success toast
+    } else {  // Add mode: send a POST request to create a new member
+      await fetch('/api/admin/member', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+      toast('Member added ✓', 'success');  // Show green success toast
+    }
+    closeModal('memberModal');  // Closes the modal after a successful save
+    await loadTeam();    // Refreshes the team table to show the new/updated member
+    await loadStats();   // Refreshes the stat cards (team size may have changed)
+  } catch(e) { toast('Error saving member', 'error'); }  // Shows a red error toast if the API call fails
+}
+
+function confirmDeleteMember(id, name) {  // Shows the confirmation dialog before deleting a team member
+  document.getElementById('confirmMsg').textContent = `Remove team member "${name}"?`;  // Sets the dialog message to include the member's name
+  document.getElementById('confirmOkBtn').onclick = async () => {  // Assigns the delete action to the dialog's OK button
+    await fetch(`/api/admin/member/${id}`, {method:'DELETE'});  // Sends DELETE /api/admin/member/{id} to the Flask API
+    closeConfirm();  // Closes the confirmation dialog
+    toast('Member removed', 'success');  // Shows a green success toast
+    await loadTeam(); await loadStats();  // Refreshes the table and stat cards
+  };
+  document.getElementById('confirmDialog').classList.add('open');  // Shows the confirmation dialog
+}
+
+// ── Utility functions ─────────────────────────────────────────────────────────
+function v(id) { return document.getElementById(id)?.value?.trim() || ''; }  // Shorthand to get a trimmed input value by element ID; returns '' if element doesn't exist or is empty
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }  // Hides a modal by removing the "open" class from its overlay element
+function closeConfirm() { document.getElementById('confirmDialog').classList.remove('open'); }  // Hides the confirmation dialog
+
+let toastTimer;  // Holds the setTimeout handle so we can cancel it if a new toast fires before the old one hides
+function toast(msg, type = 'success') {  // Shows a notification toast in the bottom-right corner for 3 seconds
+  const el = document.getElementById('toast');  // Reference to the toast element
+  el.className = '';  // Clears any existing type classes (success/error) before applying new ones
+  el.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`;  // Sets icon (✓ or !) and message text
+  el.classList.add('show', type);  // Triggers the slide-up animation and applies the color class
+  clearTimeout(toastTimer);  // Cancels any previously scheduled hide so multiple rapid toasts don't conflict
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);  // Schedules the toast to slide back down after 3 seconds
+}
+
+// Close any open modal when the user clicks directly on the dark overlay (outside the modal box)
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });  // Only triggers if the click target is the overlay itself (not a child element inside the modal)
+});
+</script>
+</body>
+</html>
