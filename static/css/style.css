@@ -15,19 +15,7 @@
   --bg-input:      #21262d;   /* Input field background: dark container for text inputs */
   --border:        #30363d;   /* Border color: muted grey divider used on cards, rows, sidebar */
   --border-light:  #21262d;   /* Lighter border variant used for inner table row dividers */
-/* Default (Dark) Theme */
-:root, [data-theme="dark"] {
-  --bg-primary: #111827;
-  --text-main: #f3f4f6;
-  --card-bg: #1f2937;
-}
 
-/* Light Theme Override */
-[data-theme="light"] {
-  --bg-primary: #ffffff;
-  --text-main: #1f2937;
-  --card-bg: #f9fafb;
-}
 
 /* Then use them in your elements */
 body {

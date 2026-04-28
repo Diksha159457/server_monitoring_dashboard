@@ -49,6 +49,23 @@ const SHIFT_COLORS = {
   PL: { bg: "#3d1515", text: "#f85149",  label: "Planned Leave" }, // Red tones — pre-approved leave
 };
 
+function applyTheme(t){
+  if(t==='auto'){
+    t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+  }
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('btn-dark') ?.style && (document.getElementById('btn-dark').style.background  = t==='dark' ?'#3b82f6':'transparent');
+  document.getElementById('btn-light')?.style && (document.getElementById('btn-light').style.background = t==='light'?'#3b82f6':'transparent');
+  document.getElementById('btn-auto') ?.style && (document.getElementById('btn-auto').style.background  = localStorage.getItem('sw-theme')==='auto'?'#3b82f6':'transparent');
+}
+function setTheme(t){ localStorage.setItem('sw-theme',t); applyTheme(t); }
+(function(){
+  applyTheme(localStorage.getItem('sw-theme')||'auto');
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{
+    if((localStorage.getItem('sw-theme')||'auto')==='auto') applyTheme('auto');
+  });
+})();
+
 // PAGE_TITLES: Maps section IDs to the display text shown in the topbar page-title element
 const PAGE_TITLES = {
   overview:  "Dashboard Overview",    // Title shown when the Overview section is active

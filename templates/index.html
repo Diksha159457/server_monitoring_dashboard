@@ -470,23 +470,6 @@
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 <!-- url_for('static', ...): Flask Jinja2 helper generates the correct URL to /static/js/main.js
      Placed last in <body> so the DOM is fully parsed before the script accesses any element by id -->
-<script>
-function applyTheme(t){
-  if(t==='auto'){
-    t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
-  }
-  document.documentElement.setAttribute('data-theme',t);
-  document.getElementById('btn-dark') ?.style && (document.getElementById('btn-dark').style.background  = t==='dark' ?'#3b82f6':'transparent');
-  document.getElementById('btn-light')?.style && (document.getElementById('btn-light').style.background = t==='light'?'#3b82f6':'transparent');
-  document.getElementById('btn-auto') ?.style && (document.getElementById('btn-auto').style.background  = localStorage.getItem('sw-theme')==='auto'?'#3b82f6':'transparent');
-}
-function setTheme(t){ localStorage.setItem('sw-theme',t); applyTheme(t); }
-(function(){
-  applyTheme(localStorage.getItem('sw-theme')||'auto');
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{
-    if((localStorage.getItem('sw-theme')||'auto')==='auto') applyTheme('auto');
-  });
-})();
-</script>
+
 </body>
 </html>
