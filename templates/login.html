@@ -206,7 +206,11 @@ input[type="password"]{padding-right:44px}
 <div class="bg-grid"></div>
 
 <div class="card">
-
+<div style="display:flex;justify-content:center;gap:2px;margin-bottom:20px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:4px;width:fit-content;margin-left:auto;margin-right:auto;">
+  <button onclick="setTheme('dark')"  id="btn-dark"  title="Dark"  style="width:32px;height:32px;border-radius:7px;border:none;cursor:pointer;background:transparent;font-size:13px;">🌙</button>
+  <button onclick="setTheme('light')" id="btn-light" title="Light" style="width:32px;height:32px;border-radius:7px;border:none;cursor:pointer;background:transparent;font-size:13px;">☀️</button>
+  <button onclick="setTheme('auto')"  id="btn-auto"  title="Auto"  style="width:32px;height:32px;border-radius:7px;border:none;cursor:pointer;background:transparent;font-size:13px;">◑</button>
+</div>
   <div class="logo-wrap">
     <div class="logo-icon">🖥️</div>
     <div class="logo-title">ServerWatch</div>
@@ -254,14 +258,7 @@ input[type="password"]{padding-right:44px}
     <strong>Username:</strong> admin &nbsp;|&nbsp; <strong>Password:</strong> serverwatch@2026<br>
     <span style="color:var(--muted)">Change via Render Environment Variables</span>
   </div>
-<div class="header-right">
-      <!-- Theme toggle -->
-      <div class="theme-toggle" title="Switch theme">
-        <button class="theme-btn" id="btn-dark"  onclick="setTheme('dark')"  title="Dark"><i class="fas fa-moon"></i></button>
-        <button class="theme-btn" id="btn-light" onclick="setTheme('light')" title="Light"><i class="fas fa-sun"></i></button>
-        <button class="theme-btn" id="btn-auto"  onclick="setTheme('auto')"  title="Auto"><i class="fas fa-circle-half-stroke"></i></button>
-      </div>
-    </div>
+
 </div>
 
 <script>
@@ -336,5 +333,10 @@ async function login() {
 // Auto-focus username field on load
 document.getElementById('username').focus();
 </script>
+<div style="display:flex;justify-content:center;gap:2px;margin-bottom:20px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:4px;width:fit-content;margin-left:auto;margin-right:auto;">
+  <button onclick="setTheme('dark')"  id="btn-dark"  title="Dark"  style="width:32px;height:32px;border-radius:7px;border:none;cursor:pointer;background:transparent;font-size:13px;">🌙</button>
+  <button onclick="setTheme('light')" id="btn-light" title="Light" style="width:32px;height:32px;border-radius:7px;border:none;cursor:pointer;background:transparent;font-size:13px;">☀️</button>
+  <button onclick="setTheme('auto')"  id="btn-auto"  title="Auto"  style="width:32px;height:32px;border-radius:7px;border:none;cursor:pointer;background:transparent;font-size:13px;">◑</button>
+</div>
 </body>
 </html>

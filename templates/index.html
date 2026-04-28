@@ -136,14 +136,7 @@
     </div>
   </aside>
   <!-- End of sidebar -->
-<div class="header-right">
-      <!-- Theme toggle -->
-      <div class="theme-toggle" title="Switch theme">
-        <button class="theme-btn" id="btn-dark"  onclick="setTheme('dark')"  title="Dark"><i class="fas fa-moon"></i></button>
-        <button class="theme-btn" id="btn-light" onclick="setTheme('light')" title="Light"><i class="fas fa-sun"></i></button>
-        <button class="theme-btn" id="btn-auto"  onclick="setTheme('auto')"  title="Auto"><i class="fas fa-circle-half-stroke"></i></button>
-      </div>
-    </div>
+
   <!-- ════════════════════════════════════════════════════════════════════════
        MAIN CONTENT AREA  —  Right panel, fills remaining width
        Contains the top header bar and all content sections (pages)
@@ -166,7 +159,12 @@
         <!-- page-title: Dynamic heading text — updated by JavaScript when the user switches sections
              id="pageTitle": Referenced by JS to update the title text on navigation -->
       </div>
-
+<!-- Theme Toggle -->
+<div style="display:flex;align-items:center;gap:2px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:4px;">
+  <button onclick="setTheme('dark')"  id="btn-dark"  title="Dark mode"  style="width:32px;height:32px;border-radius:7px;border:none;cursor:pointer;background:transparent;color:#94a3b8;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all 0.15s">🌙</button>
+  <button onclick="setTheme('light')" id="btn-light" title="Light mode" style="width:32px;height:32px;border-radius:7px;border:none;cursor:pointer;background:transparent;color:#94a3b8;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all 0.15s">☀️</button>
+  <button onclick="setTheme('auto')"  id="btn-auto"  title="Auto"       style="width:32px;height:32px;border-radius:7px;border:none;cursor:pointer;background:transparent;color:#94a3b8;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all 0.15s">◑</button>
+</div>
       <!-- Right side of topbar: last-updated timestamp injected by Flask -->
       <div class="topbar-right">
         <div class="topbar-time">
@@ -472,6 +470,23 @@
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 <!-- url_for('static', ...): Flask Jinja2 helper generates the correct URL to /static/js/main.js
      Placed last in <body> so the DOM is fully parsed before the script accesses any element by id -->
-
+<script>
+function applyTheme(t){
+  if(t==='auto'){
+    t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+  }
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('btn-dark') ?.style && (document.getElementById('btn-dark').style.background  = t==='dark' ?'#3b82f6':'transparent');
+  document.getElementById('btn-light')?.style && (document.getElementById('btn-light').style.background = t==='light'?'#3b82f6':'transparent');
+  document.getElementById('btn-auto') ?.style && (document.getElementById('btn-auto').style.background  = localStorage.getItem('sw-theme')==='auto'?'#3b82f6':'transparent');
+}
+function setTheme(t){ localStorage.setItem('sw-theme',t); applyTheme(t); }
+(function(){
+  applyTheme(localStorage.getItem('sw-theme')||'auto');
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{
+    if((localStorage.getItem('sw-theme')||'auto')==='auto') applyTheme('auto');
+  });
+})();
+</script>
 </body>
 </html>
