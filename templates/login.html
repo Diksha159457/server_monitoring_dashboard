@@ -254,7 +254,14 @@ input[type="password"]{padding-right:44px}
     <strong>Username:</strong> admin &nbsp;|&nbsp; <strong>Password:</strong> serverwatch@2026<br>
     <span style="color:var(--muted)">Change via Render Environment Variables</span>
   </div>
-
+<div class="header-right">
+      <!-- Theme toggle -->
+      <div class="theme-toggle" title="Switch theme">
+        <button class="theme-btn" id="btn-dark"  onclick="setTheme('dark')"  title="Dark"><i class="fas fa-moon"></i></button>
+        <button class="theme-btn" id="btn-light" onclick="setTheme('light')" title="Light"><i class="fas fa-sun"></i></button>
+        <button class="theme-btn" id="btn-auto"  onclick="setTheme('auto')"  title="Auto"><i class="fas fa-circle-half-stroke"></i></button>
+      </div>
+    </div>
 </div>
 
 <script>
