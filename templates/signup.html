@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Create Admin — ServerWatch</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="/static/css/theme.css"/>
+<style>
+body { display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden; }
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;}
+.bg-orb{position:absolute;border-radius:50%;filter:blur(80px);animation:float 10s ease-in-out infinite;}
+.orb1{width:500px;height:500px;background:#06b6d4;opacity:.07;top:-100px;right:-100px;animation-delay:0s;}
+.orb2{width:400px;height:400px;background:#8b5cf6;opacity:.07;bottom:-80px;left:-80px;animation-delay:-4s;}
+.bg-grid{position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(6,182,212,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(6,182,212,.03) 1px,transparent 1px);background-size:44px 44px;}
+.card{
+  position:relative;z-index:1;
+  background:var(--card-bg);border:1px solid var(--border2);
+  border-radius:24px;padding:44px 40px;
+  width:100%;max-width:460px;
+  box-shadow:0 40px 80px rgba(0,0,0,.5);
+  animation:slideUp .45s cubic-bezier(.34,1.56,.64,1);
+}
+[data-theme="light"] .card{box-shadow:0 8px 40px rgba(0,0,0,.1);}
+/* header */
+.card-header{margin-bottom:28px;}
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);margin-bottom:16px;transition:color .15s;}
+.back-link:hover{color:var(--accent);}
+.card-title{font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--text);}
+.card-title span{background:linear-gradient(135deg,var(--cyan),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.card-sub{font-size:13px;color:var(--text2);margin-top:5px;}
+/* theme */
+.theme-row{display:flex;justify-content:flex-end;margin-bottom:8px;}
+/* form grid */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+.form-group.full{grid-column:1/-1;}
+/* password strength */
+.strength-bar{height:4px;border-radius:2px;background:var(--border);margin-top:6px;overflow:hidden;}
+.strength-fill{height:100%;border-radius:2px;width:0;transition:width .3s,background .3s;}
+.strength-label{font-size:11px;margin-top:4px;font-weight:600;}
+/* requirements */
+.pw-reqs{margin-top:8px;display:flex;flex-direction:column;gap:4px;}
+.req-item{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);transition:color .2s;}
+.req-item.ok{color:var(--success);}
+.req-item i{font-size:10px;width:12px;}
+/* pw toggle */
+.pw-wrap{position:relative;}
+.pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);cursor:pointer;font-size:13px;transition:color .15s;}
+.pw-toggle:hover{color:var(--text2);}
+/* error / success */
+.alert{
+  border-radius:10px;padding:11px 14px;margin-bottom:18px;
+  font-size:13px;display:none;align-items:center;gap:8px;
+}
+.alert.show{display:flex;}
+.alert-error{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:var(--danger);}
+.alert-success{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);color:var(--success);}
+/* submit */
+.btn-signup{
+  width:100%;padding:13px;border-radius:11px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--cyan),var(--accent));
+  color:#fff;font-size:15px;font-weight:700;
+  font-family:'Inter',sans-serif;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 6px 20px rgba(6,182,212,.35);transition:all .2s;
+}
+.btn-signup:hover{box-shadow:0 8px 28px rgba(6,182,212,.5);transform:translateY(-1px);}
+.btn-signup:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.spinner{display:none;width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;animation:spin .7s linear infinite;}
+/* admin list */
+.admin-section{margin-top:28px;padding-top:22px;border-top:1px solid var(--border);}
+.admin-section h4{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.admin-pill{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:20px;padding:5px 12px;font-size:12px;color:var(--text2);
+  font-family:'JetBrains Mono',monospace;margin:3px;
+}
+.admin-pill .you{color:var(--accent);font-size:10px;font-weight:700;}
+</style>
+</head>
+<body>
+<div class="bg"><div class="bg-orb orb1"></div><div class="bg-orb orb2"></div></div>
+<div class="bg-grid"></div>
+
+<div class="card">
+  <div class="card-header">
+    <a class="back-link" href="/admin"><i class="fas fa-arrow-left"></i> Back to Admin Panel</a>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+      <div>
+        <div class="card-title">Create <span>Admin Account</span></div>
+        <div class="card-sub">Registered admins can log in and manage the dashboard</div>
+      </div>
+      <div class="theme-toggle">
+        <button class="theme-btn" id="btn-theme-dark"  onclick="setTheme('dark')"  title="Dark"><i class="fas fa-moon"></i></button>
+        <button class="theme-btn" id="btn-theme-light" onclick="setTheme('light')" title="Light"><i class="fas fa-sun"></i></button>
+        <button class="theme-btn" id="btn-theme-auto"  onclick="setTheme('auto')"  title="Auto"><i class="fas fa-circle-half-stroke"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert alert-error"   id="alertErr"><i class="fas fa-circle-exclamation"></i><span id="errMsg"></span></div>
+  <div class="alert alert-success" id="alertOk" ><i class="fas fa-circle-check"></i><span id="okMsg"></span></div>
+
+  <div class="form-grid">
+    <div class="form-group full">
+      <label>Username <span style="color:var(--danger)">*</span></label>
+      <div class="input-wrap">
+        <i class="input-icon fas fa-user"></i>
+        <input id="su-username" type="text" placeholder="e.g. johnadmin" autocomplete="off" oninput="clearAlerts()"/>
+      </div>
+      <div class="field-hint">Min. 3 characters · letters and numbers only</div>
+    </div>
+
+    <div class="form-group">
+      <label>Password <span style="color:var(--danger)">*</span></label>
+      <div class="input-wrap pw-wrap">
+        <i class="input-icon fas fa-lock"></i>
+        <input id="su-password" type="password" placeholder="Min. 6 characters" autocomplete="new-password" oninput="checkStrength()"/>
+        <i class="fas fa-eye pw-toggle" id="eye1" onclick="togglePw('su-password','eye1')"></i>
+      </div>
+      <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+      <div class="strength-label" id="strengthLabel" style="color:var(--muted)">—</div>
+    </div>
+
+    <div class="form-group">
+      <label>Confirm Password <span style="color:var(--danger)">*</span></label>
+      <div class="input-wrap pw-wrap">
+        <i class="input-icon fas fa-lock"></i>
+        <input id="su-confirm" type="password" placeholder="Re-enter password" autocomplete="new-password" oninput="checkMatch()"/>
+        <i class="fas fa-eye pw-toggle" id="eye2" onclick="togglePw('su-confirm','eye2')"></i>
+      </div>
+      <div class="field-hint" id="matchHint" style="color:var(--muted)">Must match password above</div>
+    </div>
+  </div>
+
+  <div class="pw-reqs">
+    <div class="req-item" id="req-len"><i class="fas fa-circle"></i> At least 6 characters</div>
+    <div class="req-item" id="req-upper"><i class="fas fa-circle"></i> At least one uppercase letter</div>
+    <div class="req-item" id="req-num"><i class="fas fa-circle"></i> At least one number</div>
+  </div>
+
+  <button class="btn-signup" id="signupBtn" onclick="doSignup()" style="margin-top:22px;">
+    <div class="spinner" id="spin"></div>
+    <i class="fas fa-user-plus" id="signupIco"></i>
+    <span id="signupTxt">Create Admin Account</span>
+  </button>
+
+  <!-- Admin list -->
+  <div class="admin-section" id="adminSection">
+    <h4><i class="fas fa-users-gear"></i> Existing Admin Accounts</h4>
+    <div id="adminList" style="display:flex;flex-wrap:wrap;gap:4px;">
+      <span style="font-size:12px;color:var(--muted)">Loading…</span>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="/static/js/theme.js"></script>
+<script>
+const CURRENT = "{{ current_user }}";
+
+function togglePw(inputId, eyeId){
+  var i=document.getElementById(inputId);
+  var e=document.getElementById(eyeId);
+  i.type=i.type==='password'?'text':'password';
+  e.className=i.type==='password'?'fas fa-eye pw-toggle':'fas fa-eye-slash pw-toggle';
+}
+function clearAlerts(){
+  document.getElementById('alertErr').classList.remove('show');
+  document.getElementById('alertOk').classList.remove('show');
+}
+function showErr(msg){
+  document.getElementById('errMsg').textContent=msg;
+  document.getElementById('alertErr').classList.add('show');
+  document.getElementById('alertOk').classList.remove('show');
+}
+function showOk(msg){
+  document.getElementById('okMsg').textContent=msg;
+  document.getElementById('alertOk').classList.add('show');
+  document.getElementById('alertErr').classList.remove('show');
+}
+
+function checkStrength(){
+  var pw=document.getElementById('su-password').value;
+  var score=0;
+  var r1=pw.length>=6, r2=/[A-Z]/.test(pw), r3=/[0-9]/.test(pw);
+  if(r1)score++; if(r2)score++; if(r3)score++;
+  if(pw.length>=10)score++;
+
+  function setReq(id,ok){
+    var el=document.getElementById(id);
+    el.classList.toggle('ok',ok);
+    el.querySelector('i').className=ok?'fas fa-circle-check':'fas fa-circle';
+  }
+  setReq('req-len',r1); setReq('req-upper',r2); setReq('req-num',r3);
+
+  var fill=document.getElementById('strengthFill');
+  var lbl=document.getElementById('strengthLabel');
+  var levels=[
+    {w:'0%',  c:'transparent',        t:''},
+    {w:'33%', c:'var(--danger)',       t:'Weak'},
+    {w:'60%', c:'var(--warning)',      t:'Fair'},
+    {w:'80%', c:'var(--accent)',       t:'Good'},
+    {w:'100%',c:'var(--success)',      t:'Strong'},
+  ];
+  var l=levels[score]||levels[0];
+  fill.style.width=l.w; fill.style.background=l.c;
+  lbl.textContent=l.t; lbl.style.color=l.c;
+  checkMatch();
+}
+function checkMatch(){
+  var pw=document.getElementById('su-password').value;
+  var cf=document.getElementById('su-confirm').value;
+  var hint=document.getElementById('matchHint');
+  if(!cf){hint.textContent='Must match password above';hint.style.color='var(--muted)';return;}
+  if(pw===cf){hint.textContent='✓ Passwords match';hint.style.color='var(--success)';}
+  else{hint.textContent='✗ Passwords do not match';hint.style.color='var(--danger)';}
+}
+function setLoading(on){
+  var btn=document.getElementById('signupBtn');
+  btn.disabled=on;
+  document.getElementById('spin').style.display=on?'block':'none';
+  document.getElementById('signupIco').style.display=on?'none':'inline';
+  document.getElementById('signupTxt').textContent=on?'Creating account…':'Create Admin Account';
+}
+async function doSignup(){
+  clearAlerts();
+  var u=document.getElementById('su-username').value.trim();
+  var p=document.getElementById('su-password').value;
+  var c=document.getElementById('su-confirm').value;
+  if(!u||!p||!c){showErr('All fields are required');return;}
+  if(u.length<3){showErr('Username must be at least 3 characters');return;}
+  if(p.length<6){showErr('Password must be at least 6 characters');return;}
+  if(p!==c){showErr('Passwords do not match');return;}
+  setLoading(true);
+  try{
+    var res=await fetch('/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p,confirm:c})});
+    var d=await res.json();
+    if(d.ok){
+      showOk('Account "'+d.username+'" created successfully!');
+      document.getElementById('su-username').value='';
+      document.getElementById('su-password').value='';
+      document.getElementById('su-confirm').value='';
+      document.getElementById('strengthFill').style.width='0';
+      document.getElementById('strengthLabel').textContent='—';
+      loadAdmins();
+    }else{
+      showErr(d.error||'Failed to create account');
+    }
+  }catch(e){showErr('Connection error — try again');}
+  setLoading(false);
+}
+
+async function loadAdmins(){
+  // We can't list admins via API without adding a route,
+  // so we reload the page to get the fresh count from Flask.
+  // For now just show a refresh prompt.
+  document.getElementById('adminList').innerHTML=
+    '<span style="font-size:12px;color:var(--text2)">Refresh page to see updated admin list</span>';
+}
+loadAdmins();
+document.getElementById('su-username').focus();
+</script>
+</body>
+</html>
