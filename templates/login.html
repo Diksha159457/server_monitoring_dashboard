@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Login — ServerWatch</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+:root {
+  --bg:      #060b14;
+  --surface: #0d1520;
+  --surface2:#111d2e;
+  --border:  #1e3050;
+  --border2: #254068;
+  --accent:  #3b82f6;
+  --accent2: #6366f1;
+  --danger:  #ef4444;
+  --success: #10b981;
+  --text:    #e2e8f0;
+  --text2:   #94a3b8;
+  --muted:   #475569;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Inter',sans-serif;
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+
+/* ── Animated background ── */
+.bg-anim{
+  position:fixed;inset:0;z-index:0;overflow:hidden;
+}
+.bg-orb{
+  position:absolute;border-radius:50%;filter:blur(80px);opacity:0.15;
+  animation:float 8s ease-in-out infinite;
+}
+.orb1{width:500px;height:500px;background:#3b82f6;top:-100px;left:-150px;animation-delay:0s}
+.orb2{width:400px;height:400px;background:#6366f1;bottom:-100px;right:-100px;animation-delay:-3s}
+.orb3{width:300px;height:300px;background:#06b6d4;top:40%;left:40%;animation-delay:-5s;opacity:0.08}
+@keyframes float{
+  0%,100%{transform:translateY(0) scale(1)}
+  50%{transform:translateY(-30px) scale(1.05)}
+}
+
+/* ── Grid overlay ── */
+.bg-grid{
+  position:fixed;inset:0;z-index:0;
+  background-image:
+    linear-gradient(rgba(59,130,246,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(59,130,246,0.04) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+
+/* ── Card ── */
+.card{
+  position:relative;z-index:1;
+  background:linear-gradient(145deg,rgba(13,21,32,0.95),rgba(10,18,28,0.98));
+  border:1px solid var(--border2);
+  border-radius:24px;
+  padding:48px 44px;
+  width:100%;max-width:420px;
+  box-shadow:
+    0 40px 80px rgba(0,0,0,0.6),
+    0 0 0 1px rgba(59,130,246,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+  animation:cardIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes cardIn{
+  from{opacity:0;transform:translateY(30px) scale(0.95)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* ── Logo ── */
+.logo-wrap{text-align:center;margin-bottom:36px}
+.logo-icon{
+  width:64px;height:64px;border-radius:18px;margin:0 auto 16px;
+  background:linear-gradient(135deg,#3b82f6,#6366f1);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;
+  box-shadow:0 8px 24px rgba(59,130,246,0.4),0 0 0 1px rgba(59,130,246,0.2);
+  position:relative;overflow:hidden;
+}
+.logo-icon::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.15),transparent);
+}
+.logo-title{font-size:22px;font-weight:800;letter-spacing:-0.02em;margin-bottom:4px}
+.logo-sub{font-size:12px;color:var(--text2);font-family:'JetBrains Mono',monospace}
+.logo-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);
+  color:var(--accent);border-radius:20px;
+  padding:3px 10px;font-size:11px;font-weight:700;margin-top:8px;
+  font-family:'JetBrains Mono',monospace;
+}
+.logo-badge i{font-size:9px}
+
+/* ── Form ── */
+.form-group{margin-bottom:18px}
+label{
+  display:block;font-size:12px;font-weight:600;color:var(--text2);
+  text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;
+}
+.input-wrap{position:relative}
+.input-wrap i.prefix{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  color:var(--muted);font-size:13px;pointer-events:none;
+}
+.input-wrap i.toggle{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  color:var(--muted);font-size:13px;cursor:pointer;
+  transition:color 0.15s;
+}
+.input-wrap i.toggle:hover{color:var(--text2)}
+input{
+  width:100%;background:var(--surface2);
+  border:1px solid var(--border);border-radius:12px;
+  color:var(--text);padding:13px 14px 13px 40px;
+  font-size:14px;font-family:'Inter',sans-serif;
+  outline:none;transition:border-color 0.2s,box-shadow 0.2s;
+}
+input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(59,130,246,0.15);
+}
+input.error{border-color:var(--danger);box-shadow:0 0 0 3px rgba(239,68,68,0.12)}
+input[type="password"]{padding-right:44px}
+
+/* ── Error message ── */
+.error-box{
+  display:none;
+  background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);
+  border-radius:10px;padding:11px 14px;margin-bottom:18px;
+  font-size:13px;color:var(--danger);
+  display:flex;align-items:center;gap:8px;
+  opacity:0;transition:opacity 0.2s;
+}
+.error-box.show{opacity:1}
+.error-box i{font-size:14px;flex-shrink:0}
+
+/* ── Submit button ── */
+.btn-login{
+  width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#3b82f6,#6366f1);
+  color:#fff;font-size:15px;font-weight:700;
+  font-family:'Inter',sans-serif;letter-spacing:0.01em;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 6px 20px rgba(59,130,246,0.4);
+  transition:all 0.2s;position:relative;overflow:hidden;
+  margin-top:8px;
+}
+.btn-login::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.1),transparent);
+}
+.btn-login:hover{box-shadow:0 8px 28px rgba(59,130,246,0.55);transform:translateY(-1px)}
+.btn-login:active{transform:translateY(0)}
+.btn-login:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.spinner{
+  display:none;width:16px;height:16px;border-radius:50%;
+  border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;
+  animation:spin 0.7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Divider ── */
+.divider{
+  display:flex;align-items:center;gap:12px;
+  margin:24px 0;color:var(--muted);font-size:12px;
+}
+.divider::before,.divider::after{
+  content:'';flex:1;height:1px;background:var(--border);
+}
+
+/* ── Back link ── */
+.back-link{
+  text-align:center;margin-top:20px;
+  font-size:13px;color:var(--text2);
+}
+.back-link a{
+  color:var(--accent);text-decoration:none;font-weight:600;
+  transition:color 0.15s;
+}
+.back-link a:hover{color:#60a5fa}
+
+/* ── Hint ── */
+.hint-box{
+  background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);
+  border-radius:10px;padding:10px 14px;margin-top:20px;
+  font-size:12px;color:var(--text2);font-family:'JetBrains Mono',monospace;
+  line-height:1.6;
+}
+.hint-box strong{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<div class="bg-anim">
+  <div class="bg-orb orb1"></div>
+  <div class="bg-orb orb2"></div>
+  <div class="bg-orb orb3"></div>
+</div>
+<div class="bg-grid"></div>
+
+<div class="card">
+
+  <div class="logo-wrap">
+    <div class="logo-icon">🖥️</div>
+    <div class="logo-title">ServerWatch</div>
+    <div class="logo-sub">SMP Admin Control Panel</div>
+    <div class="logo-badge"><i class="fas fa-lock"></i> Secure Access</div>
+  </div>
+
+  <div class="error-box" id="errorBox">
+    <i class="fas fa-circle-exclamation"></i>
+    <span id="errorMsg">Invalid username or password</span>
+  </div>
+
+  <div class="form-group">
+    <label>Username</label>
+    <div class="input-wrap">
+      <i class="fas fa-user prefix"></i>
+      <input id="username" type="text" placeholder="Enter username" autocomplete="username" onkeydown="if(event.key==='Enter')login()"/>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Password</label>
+    <div class="input-wrap">
+      <i class="fas fa-lock prefix"></i>
+      <input id="password" type="password" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()"/>
+      <i class="fas fa-eye toggle" id="eyeIcon" onclick="togglePassword()"></i>
+    </div>
+  </div>
+
+  <button class="btn-login" id="loginBtn" onclick="login()">
+    <span class="spinner" id="spinner"></span>
+    <i class="fas fa-right-to-bracket" id="loginIcon"></i>
+    <span id="loginText">Sign In to Admin Panel</span>
+  </button>
+
+  <div class="divider">or</div>
+
+  <div class="back-link">
+    <i class="fas fa-arrow-left" style="font-size:11px"></i>
+    <a href="/"> Return to Dashboard</a>
+  </div>
+
+  <div class="hint-box">
+    💡 Default credentials for demo:<br>
+    <strong>Username:</strong> admin &nbsp;|&nbsp; <strong>Password:</strong> serverwatch@2026<br>
+    <span style="color:var(--muted)">Change via Render Environment Variables</span>
+  </div>
+
+</div>
+
+<script>
+function togglePassword() {
+  const input = document.getElementById('password');
+  const icon  = document.getElementById('eyeIcon');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.className = 'fas fa-eye-slash toggle';
+  } else {
+    input.type = 'password';
+    icon.className = 'fas fa-eye toggle';
+  }
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  document.getElementById('errorMsg').textContent = msg;
+  box.style.display = 'flex';
+  setTimeout(() => box.classList.add('show'), 10);
+  document.getElementById('username').classList.add('error');
+  document.getElementById('password').classList.add('error');
+}
+
+function clearError() {
+  const box = document.getElementById('errorBox');
+  box.classList.remove('show');
+  setTimeout(() => { box.style.display = 'none'; }, 200);
+  document.getElementById('username').classList.remove('error');
+  document.getElementById('password').classList.remove('error');
+}
+
+function setLoading(on) {
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = on;
+  document.getElementById('spinner').style.display  = on ? 'block' : 'none';
+  document.getElementById('loginIcon').style.display = on ? 'none' : 'inline';
+  document.getElementById('loginText').textContent = on ? 'Signing in…' : 'Sign In to Admin Panel';
+}
+
+async function login() {
+  clearError();
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+
+  if (!username || !password) {
+    showError('Please enter both username and password');
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const res  = await fetch('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      document.getElementById('loginText').textContent = 'Success! Redirecting…';
+      setTimeout(() => { window.location.href = '/admin'; }, 500);
+    } else {
+      setLoading(false);
+      showError(data.error || 'Invalid username or password');
+    }
+  } catch (e) {
+    setLoading(false);
+    showError('Connection error — please try again');
+  }
+}
+
+// Auto-focus username field on load
+document.getElementById('username').focus();
+</script>
+</body>
+</html>
