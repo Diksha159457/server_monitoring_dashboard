@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ServerWatch — Enterprise Monitoring</title>
-  
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -12,6 +11,7 @@
 <body>
 
 <div class="layout">
+  <!-- ── SIDEBAR ── -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="brand-container">
@@ -49,22 +49,20 @@
     </div>
   </aside>
 
+  <!-- ── MAIN ── -->
   <main class="main-content">
     <header class="topbar">
       <div class="topbar-left">
         <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars-staggered"></i></button>
         <h1 id="pageTitle">Executive Summary</h1>
       </div>
-
       <div class="topbar-right">
         <div class="theme-control">
           <button onclick="setTheme('light')" id="btn-light" title="Light"><i class="fas fa-sun"></i></button>
-          <button onclick="setTheme('dark')" id="btn-dark" title="Dark"><i class="fas fa-moon"></i></button>
-          <button onclick="setTheme('auto')" id="btn-auto" title="System"><i class="fas fa-circle-half-stroke"></i></button>
+          <button onclick="setTheme('dark')"  id="btn-dark"  title="Dark"><i class="fas fa-moon"></i></button>
+          <button onclick="setTheme('auto')"  id="btn-auto"  title="System"><i class="fas fa-circle-half-stroke"></i></button>
         </div>
-        
         <div class="v-divider"></div>
-        
         <div class="time-display">
           <i class="fas fa-calendar"></i>
           <span>{{ now }}</span>
@@ -73,25 +71,26 @@
     </header>
 
     <div class="content-wrapper">
+
+      <!-- ══ OVERVIEW ══ -->
       <section class="content-section active" id="section-overview">
         <div class="welcome-banner">
           <div class="banner-text">
             <h2>Welcome Back, Admin</h2>
             <p>Your infrastructure is currently performing within optimal parameters.</p>
           </div>
+          <div class="banner-badge"><i class="fas fa-circle-check"></i> All Systems Operational</div>
         </div>
 
-        <div class="stat-grid" id="statCards">
-          </div>
+        <div class="stat-grid" id="statCards"></div>
 
         <div class="dashboard-row">
           <div class="card glass-card">
             <div class="card-header">
               <h3><i class="fas fa-chart-line"></i> Disk Utilization</h3>
-              <button class="card-action">View Full Report</button>
+              <button class="card-action" onclick="document.querySelector('[data-section=disk]').click()">View Full Report</button>
             </div>
-            <div class="card-body" id="diskSummaryBars">
-              </div>
+            <div class="card-body" id="diskSummaryBars"></div>
           </div>
 
           <div class="card glass-card">
@@ -99,63 +98,139 @@
               <h3><i class="fas fa-layer-group"></i> Environment Distribution</h3>
             </div>
             <div class="card-body">
-              <div class="env-distribution" id="envTiles">
-                </div>
+              <div class="env-distribution" id="envTiles"></div>
             </div>
           </div>
         </div>
       </section>
 
+      <!-- ══ INVENTORY ══ -->
       <section class="content-section" id="section-inventory">
         <div class="table-controls">
           <div class="filter-group" id="envFilters"></div>
           <div class="search-wrapper">
             <i class="fas fa-search"></i>
-            <input type="text" id="inventorySearch" placeholder="Filter by Hostname, IP, or App...">
+            <input type="text" id="inventorySearch" placeholder="Filter by Hostname, IP, or App…">
           </div>
         </div>
-        
+
         <div class="card table-card">
           <div class="table-responsive">
             <table class="data-table">
               <thead>
                 <tr>
                   <th>Team</th><th>Application</th><th>IP Address</th><th>Hostname</th>
-                  <th>Environment</th><th>Status</th><th>Category</th>
+                  <th>Environment</th><th>Status</th><th>OS</th><th>Ver</th>
+                  <th>Tech</th><th>Category</th><th>Memory</th><th>CPU</th><th>HW</th>
                 </tr>
               </thead>
               <tbody id="inventoryBody"></tbody>
             </table>
           </div>
+          <div class="table-footer">
+            <span id="inventoryCount" class="row-count">Loading…</span>
+          </div>
         </div>
       </section>
 
-      </div>
+      <!-- ══ DISK ══ -->
+      <section class="content-section" id="section-disk">
+        <div class="section-intro">
+          <h2 class="section-title-text"><i class="fas fa-microchip"></i> Disk Usage Monitoring</h2>
+          <p class="section-subtitle">Real-time storage utilization across all servers. Critical threshold ≥85%, Warning ≥65%.</p>
+        </div>
+
+        <div class="card table-card">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Hostname</th>
+                  <th>Total (GB)</th>
+                  <th>Used (GB)</th>
+                  <th>Available (GB)</th>
+                  <th>Utilization</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="diskBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ TEAM ══ -->
+      <section class="content-section" id="section-team">
+        <div class="table-controls">
+          <div class="section-intro-inline">
+            <h2 class="section-title-text"><i class="fas fa-user-group"></i> IT Personnel</h2>
+          </div>
+          <div class="search-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" id="teamSearch" placeholder="Search by name, project, or ID…">
+          </div>
+        </div>
+
+        <div class="card table-card">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Emp ID</th><th>Name</th><th>Date of Joining</th>
+                  <th>Project</th><th>Contact</th><th>Email</th>
+                </tr>
+              </thead>
+              <tbody id="teamBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ ROSTER ══ -->
+      <section class="content-section" id="section-roster">
+        <div class="section-intro">
+          <h2 class="section-title-text"><i class="fas fa-calendar-days"></i> Shift Schedule</h2>
+          <p class="section-subtitle">Monthly shift roster for all IT personnel. Scroll horizontally to view all 31 days.</p>
+        </div>
+
+        <div class="card" style="padding:16px 20px 12px;">
+          <div class="shift-legend" id="shiftLegend"></div>
+        </div>
+
+        <div class="card table-card roster-card">
+          <div class="table-responsive">
+            <table class="data-table roster-table">
+              <thead id="rosterHead"></thead>
+              <tbody id="rosterBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /content-wrapper -->
   </main>
 </div>
 
+<!-- Mobile overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 <script>
-/* Theme Logic Integration */
-function applyTheme(t) {
-  let target = t;
-  if (t === 'auto') target = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', target);
-  
-  document.querySelectorAll('.theme-control button').forEach(b => b.classList.remove('active'));
-  document.getElementById('btn-' + t).classList.add('active');
-}
-
-function setTheme(t) {
-  localStorage.setItem('sw-theme', t);
-  applyTheme(t);
-}
-
 (function() {
-  const saved = localStorage.getItem('sw-theme') || 'auto';
+  function applyTheme(t) {
+    let resolved = t;
+    if (t === 'auto') resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', resolved);
+    ['light','dark','auto'].forEach(function(k) {
+      var btn = document.getElementById('btn-' + k);
+      if (btn) btn.classList.toggle('active', k === t);
+    });
+  }
+  window.setTheme = function(t) { localStorage.setItem('sw-theme', t); applyTheme(t); };
+  var saved = localStorage.getItem('sw-theme') || 'auto';
   applyTheme(saved);
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    if (localStorage.getItem('sw-theme') === 'auto') applyTheme('auto');
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
+    if ((localStorage.getItem('sw-theme') || 'auto') === 'auto') applyTheme('auto');
   });
 })();
 </script>

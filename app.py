@@ -238,11 +238,17 @@ def admin():
 @api_login_required
 def add_server():
     body = request.get_json(force=True)
-    data = load_data()
+    # Required field validation
+    for field in ("app", "hostname", "ip"):
+        if not body.get(field, "").strip():
+            return jsonify({"ok": False, "error": f"Field '{field}' is required"}), 400
+    data  = load_data()
+    total = max(int(body.get("diskTotal", 500)), 1)
+    used  = max(int(body.get("diskUsed",  100)), 0)
+    if used > total:
+        return jsonify({"ok": False, "error": "Used disk cannot exceed total disk"}), 400
     body["id"] = next_inv_id(data["inventory"])
-    total = int(body.get("diskTotal", 500))
-    used  = int(body.get("diskUsed",  100))
-    data["inventory"].append({k: v for k, v in body.items() if k not in ("diskTotal","diskUsed")})
+    data["inventory"].append({k: v for k, v in body.items() if k not in ("diskTotal", "diskUsed")})
     data["disk"].append({"hostname": body["hostname"], "total": total, "used": used,
                          "avail": total - used, "pct": round(used / total * 100)})
     save_data(data)
@@ -257,8 +263,10 @@ def update_server(sid):
         if s["id"] == sid:
             data["inventory"][i] = {**s, **body, "id": sid}
             if "diskTotal" in body or "diskUsed" in body:
-                total = int(body.get("diskTotal", 500))
-                used  = int(body.get("diskUsed", 100))
+                total = max(int(body.get("diskTotal", 500)), 1)
+                used  = max(int(body.get("diskUsed",  100)), 0)
+                if used > total:
+                    return jsonify({"ok": False, "error": "Used disk cannot exceed total disk"}), 400
                 hn = data["inventory"][i]["hostname"]
                 for j, d in enumerate(data["disk"]):
                     if d["hostname"] == hn:
@@ -312,6 +320,13 @@ def delete_member(emp_id):
     data["team"] = team
     save_data(data)
     return jsonify({"ok": True})
+
+@app.route("/api/admin/list")
+@api_login_required
+def list_admins():
+    """Return list of admin usernames (no passwords)."""
+    admins = load_admins()
+    return jsonify({"admins": list(admins.keys())})
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

@@ -254,11 +254,18 @@ async function doSignup(){
 }
 
 async function loadAdmins(){
-  // We can't list admins via API without adding a route,
-  // so we reload the page to get the fresh count from Flask.
-  // For now just show a refresh prompt.
-  document.getElementById('adminList').innerHTML=
-    '<span style="font-size:12px;color:var(--text2)">Refresh page to see updated admin list</span>';
+  try{
+    var res=await fetch('/api/admin/list');
+    if(!res.ok){throw new Error('Unauthorised');}
+    var d=await res.json();
+    var html=d.admins.map(function(name){
+      var isYou=name===CURRENT;
+      return '<span class="admin-pill"><i class="fas fa-user-shield" style="font-size:10px;color:var(--accent)"></i>'+name+(isYou?' <span class="you">YOU</span>':'')+'</span>';
+    }).join('');
+    document.getElementById('adminList').innerHTML=html||'<span style="font-size:12px;color:var(--muted)">No admins found</span>';
+  }catch(e){
+    document.getElementById('adminList').innerHTML='<span style="font-size:12px;color:var(--muted)">Could not load admin list</span>';
+  }
 }
 loadAdmins();
 document.getElementById('su-username').focus();

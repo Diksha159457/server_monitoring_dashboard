@@ -539,11 +539,11 @@ select option{background:var(--surface2);color:var(--text)}
   </div>
 
   <div class="nav-label">Manage</div>
-  <a class="nav-item active" href="#" onclick="showSection('servers',this)">
+  <a class="nav-item active" href="#" onclick="showSection('servers',this);return false;">
     <i class="fas fa-server"></i> Servers
     <span class="nav-count" id="nav-srv">—</span>
   </a>
-  <a class="nav-item" href="#" onclick="showSection('team',this)">
+  <a class="nav-item" href="#" onclick="showSection('team',this);return false;">
     <i class="fas fa-users"></i> Team Members
     <span class="nav-count" id="nav-team">—</span>
   </a>
@@ -554,13 +554,11 @@ select option{background:var(--surface2);color:var(--text)}
     <i class="fas fa-arrow-up-right-from-square" style="margin-left:auto;font-size:10px;opacity:0.4"></i>
   </a>
   <a class="nav-item" href="/signup">
-  <i class="fas fa-user-gear"></i> Manage Admins
+    <i class="fas fa-user-gear"></i> Manage Admins
   </a>
-    <a class="nav-item" href="/logout" style="color:var(--danger)">
-  <i class="fas fa-right-from-bracket"></i> Logout
-</a>
-    <a class="nav-item" href="/">
-      <i class="fas fa-arrow-left"></i> Back to Dashboard
+  <div class="sidebar-footer" style="margin-top:auto;padding:12px 10px;border-top:1px solid rgba(255,255,255,0.06);">
+    <a class="nav-item danger" href="/logout">
+      <i class="fas fa-right-from-bracket"></i> Logout
     </a>
   </div>
 </aside>
@@ -923,12 +921,11 @@ async function loadStats(){
 }
 
 // ── Nav ────────────────────────────────────────────────────────────────────────
-function showSection(name,el){
-  event.preventDefault();
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('section-'+name).classList.add('active');
-  el.classList.add('active');
+function showSection(name, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  if (el) el.classList.add('active');
 }
 
 // ── Servers ────────────────────────────────────────────────────────────────────

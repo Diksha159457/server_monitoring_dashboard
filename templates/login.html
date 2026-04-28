@@ -240,7 +240,6 @@ async function login() {
   btn.disabled = true;
   document.getElementById('spinner').style.display = 'block';
   document.getElementById('loginIcon').style.display = 'none';
-
   try {
     const res = await fetch('/login', {
       method: 'POST',
@@ -261,6 +260,9 @@ async function login() {
     alert('Connection error');
   }
 }
+
+document.addEventListener('keydown', function(e) { if (e.key === 'Enter') login(); });
+document.getElementById('username').focus();
 </script>
 </body>
 </html>

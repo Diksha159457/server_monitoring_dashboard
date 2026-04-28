@@ -49,22 +49,8 @@ const SHIFT_COLORS = {
   PL: { bg: "#3d1515", text: "#f85149",  label: "Planned Leave" }, // Red tones — pre-approved leave
 };
 
-function applyTheme(t){
-  if(t==='auto'){
-    t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
-  }
-  document.documentElement.setAttribute('data-theme',t);
-  document.getElementById('btn-dark') ?.style && (document.getElementById('btn-dark').style.background  = t==='dark' ?'#3b82f6':'transparent');
-  document.getElementById('btn-light')?.style && (document.getElementById('btn-light').style.background = t==='light'?'#3b82f6':'transparent');
-  document.getElementById('btn-auto') ?.style && (document.getElementById('btn-auto').style.background  = localStorage.getItem('sw-theme')==='auto'?'#3b82f6':'transparent');
-}
-function setTheme(t){ localStorage.setItem('sw-theme',t); applyTheme(t); }
-(function(){
-  applyTheme(localStorage.getItem('sw-theme')||'auto');
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{
-    if((localStorage.getItem('sw-theme')||'auto')==='auto') applyTheme('auto');
-  });
-})();
+// Theme is handled by the inline script in index.html.
+// setTheme() is defined there and available globally.
 
 // PAGE_TITLES: Maps section IDs to the display text shown in the topbar page-title element
 const PAGE_TITLES = {
@@ -566,12 +552,20 @@ async function renderRoster() {
  * to toggle the "open" class on the sidebar (slides it in/out on narrow screens)
  */
 function initMobileMenu() {
-  const toggleBtn = document.getElementById("menuToggle"); // Gets the hamburger button element
-  const sidebar   = document.getElementById("sidebar");    // Gets the sidebar aside element
+  const toggleBtn = document.getElementById("menuToggle");
+  const sidebar   = document.getElementById("sidebar");
+  const overlay   = document.getElementById("sidebarOverlay");
 
-  if (toggleBtn && sidebar) {                      // Guard: only proceed if both elements exist in the DOM
-    toggleBtn.addEventListener("click", () => {    // Attaches a click event listener to the toggle button
-      sidebar.classList.toggle("open");             // "open" adds left:0 to slide sidebar on-screen; removes it to slide off
+  if (toggleBtn && sidebar) {
+    toggleBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("open");
+      if (overlay) overlay.classList.toggle("open");
+    });
+  }
+  if (overlay) {
+    overlay.addEventListener("click", () => {
+      sidebar.classList.remove("open");
+      overlay.classList.remove("open");
     });
   }
 }
