@@ -1,55 +1,50 @@
-from flask import Flask, render_template, jsonify, request, abort, session, redirect, url_for  # Added: session (stores login state), redirect (sends browser to a new URL), url_for (builds URLs from function names)
-from datetime import datetime  # Used to get current date/time for the dashboard header
-from pathlib import Path       # Cross-platform file path handling
-from functools import wraps    # wraps: preserves the original function's name when creating decorator wrappers
-import json, copy, os          # json: read/write JSON; copy: deep copy DEFAULT_DATA; os: read environment variables (SECRET_KEY, ADMIN_PASSWORD)
+from flask import Flask, render_template, jsonify, request, abort, session, redirect, url_for
+from datetime import datetime
+from pathlib import Path
+from functools import wraps
+import json, copy, os
 
-app = Flask(__name__)  # Creates the Flask application instance
+app = Flask(__name__)
 
-# ── Security configuration ─────────────────────────────────────────────────────
-
+# ── Security ───────────────────────────────────────────────────────────────────
 app.secret_key = os.environ.get("SECRET_KEY", "serverwatch-dev-secret-2026")
-# secret_key signs the session cookie so it can't be forged by users.
-# On Render: set SECRET_KEY in Environment Variables to a long random string.
-# The fallback string is only used during local development.
 
-ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
-# The login username — set ADMIN_USERNAME in Render's Environment Variables.
-# Falls back to "admin" for local development.
+ADMIN_CREDENTIALS_FILE = Path(__file__).resolve().parent / "admins.json"
 
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "serverwatch@2026")
-# The login password — set ADMIN_PASSWORD in Render's Environment Variables.
-# Falls back to "serverwatch@2026" for local dev. NEVER hardcode real passwords in production.
+def load_admins():
+    """Load admin accounts from admins.json. Creates default on first run."""
+    if ADMIN_CREDENTIALS_FILE.exists():
+        return json.loads(ADMIN_CREDENTIALS_FILE.read_text(encoding="utf-8"))
+    # Default admin account seeded on first run
+    default = {"admin": "serverwatch@2026"}
+    ADMIN_CREDENTIALS_FILE.write_text(json.dumps(default, indent=2), encoding="utf-8")
+    return default
 
-# ── Auth decorator ─────────────────────────────────────────────────────────────
+def save_admins(admins):
+    ADMIN_CREDENTIALS_FILE.write_text(json.dumps(admins, indent=2), encoding="utf-8")
 
+# ── Auth decorators ────────────────────────────────────────────────────────────
 def login_required(f):
-    # A decorator that protects any route it wraps.
-    # If the user is not logged in, they are redirected to the login page instead of seeing the route.
-    @wraps(f)  # Preserves the wrapped function's __name__ so Flask's URL routing still works correctly
-    def decorated(*args, **kwargs):
-        if not session.get("logged_in"):          # Checks the server-side session for the "logged_in" flag
-            return redirect(url_for("login"))     # Not logged in → redirect to /login
-        return f(*args, **kwargs)                 # Logged in → proceed normally to the original route
-    return decorated
-
-def api_login_required(f):
-    # Same as login_required but for API routes — returns JSON 401 instead of an HTML redirect.
-    # This prevents the browser from trying to render a redirect response as JSON data.
     @wraps(f)
     def decorated(*args, **kwargs):
         if not session.get("logged_in"):
-            return jsonify({"error": "Unauthorised"}), 401  # Returns HTTP 401 with a JSON error body
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return decorated
+
+def api_login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get("logged_in"):
+            return jsonify({"error": "Unauthorised"}), 401
         return f(*args, **kwargs)
     return decorated
 
 # ── File paths ─────────────────────────────────────────────────────────────────
+BASE_DIR  = Path(__file__).resolve().parent
+DATA_FILE = BASE_DIR / "data.json"
 
-BASE_DIR  = Path(__file__).resolve().parent  # Absolute path of the folder containing app.py
-DATA_FILE = BASE_DIR / "data.json"           # Full path to data.json — stores all persistent app data
-
-# ── Default seed data ──────────────────────────────────────────────────────────
-
+# ── Default data ───────────────────────────────────────────────────────────────
 DEFAULT_DATA = {
     "inventory": [
         {"id": 1, "team": "SMP",  "app": "AppServer-01", "ip": "192.168.1.10", "hostname": "smp-app01",  "env": "Production", "status": "Active",   "osType": "Linux RHEL", "osVer": "8.8",  "tech": "Java",    "category": "App", "memory": "16 GB", "cpu": 8,  "hw": "Physical"},
@@ -90,7 +85,6 @@ SHIFT_CODES = ["G","M1","E","N","CO","PL","G","G","M1","E","N","G","G","CO","G",
 WEEKDAYS    = ["F","S","S","M","T","W","T","F","S","S","M","T","W","T","F","S","S","M","T","W","T","F","S","S","M","T","W","T","S","S","M"]
 
 # ── Data helpers ───────────────────────────────────────────────────────────────
-
 def load_data():
     if DATA_FILE.exists():
         return json.loads(DATA_FILE.read_text(encoding="utf-8"))
@@ -109,9 +103,9 @@ def next_emp_id(team):
     return f"EMP{(max(nums, default=0)+1):03d}"
 
 def disk_status(pct):
-    if pct >= 85: return "Critical", "critical"
-    if pct >= 65: return "Warning",  "warning"
-    return "Normal", "normal"
+    if pct >= 85: return "Critical","critical"
+    if pct >= 65: return "Warning","warning"
+    return "Normal","normal"
 
 def build_roster(team):
     roster = []
@@ -132,46 +126,76 @@ def get_summary(data):
         "teamSize": len(team),
     }
 
-# ── Auth routes ────────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# AUTH ROUTES
+# ══════════════════════════════════════════════════════════════════════════════
 
 @app.route("/login", methods=["GET"])
 def login():
-    # GET /login → show the login page.
-    # If the user is already logged in, skip the login page and go straight to /admin.
     if session.get("logged_in"):
-        return redirect(url_for("admin"))       # Already authenticated → go to admin
-    return render_template("login.html")        # Not authenticated → show login form
+        return redirect(url_for("admin"))
+    return render_template("login.html")
 
 @app.route("/login", methods=["POST"])
 def login_post():
-    # POST /login → validate the submitted username and password.
-    # The login form submits JSON so the admin page can handle the response in JavaScript.
-    body     = request.get_json(force=True)             # Parses the JSON body sent by the login form's fetch() call
-    username = body.get("username", "").strip()         # Reads and trims the submitted username
-    password = body.get("password", "")                 # Reads the submitted password (not trimmed — spaces in passwords are valid)
-
-    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-        # Credentials match → create an authenticated session
-        session["logged_in"] = True                     # Sets the session flag that all protected routes check
-        session["username"]  = username                 # Stores the username so the admin page can display it
-        session.permanent    = False                    # Session expires when the browser is closed (not persistent)
-        return jsonify({"ok": True})                    # Tells the login page JavaScript to redirect to /admin
-
-    # Wrong credentials → return a 401 error without revealing which field was wrong
+    body     = request.get_json(force=True)
+    username = body.get("username", "").strip()
+    password = body.get("password", "")
+    admins   = load_admins()
+    if username in admins and admins[username] == password:
+        session["logged_in"] = True
+        session["username"]  = username
+        session.permanent    = False
+        return jsonify({"ok": True})
     return jsonify({"ok": False, "error": "Invalid username or password"}), 401
+
+@app.route("/signup", methods=["GET"])
+def signup():
+    """Signup page — only accessible when already logged in as an admin."""
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
+    return render_template("signup.html", current_user=session.get("username",""))
+
+@app.route("/signup", methods=["POST"])
+def signup_post():
+    """Create a new admin account — requires existing admin session."""
+    if not session.get("logged_in"):
+        return jsonify({"ok": False, "error": "Unauthorised"}), 401
+    body     = request.get_json(force=True)
+    username = body.get("username", "").strip()
+    password = body.get("password", "")
+    confirm  = body.get("confirm", "")
+
+    if not username or not password:
+        return jsonify({"ok": False, "error": "Username and password are required"}), 400
+    if len(username) < 3:
+        return jsonify({"ok": False, "error": "Username must be at least 3 characters"}), 400
+    if len(password) < 6:
+        return jsonify({"ok": False, "error": "Password must be at least 6 characters"}), 400
+    if password != confirm:
+        return jsonify({"ok": False, "error": "Passwords do not match"}), 400
+
+    admins = load_admins()
+    if username in admins:
+        return jsonify({"ok": False, "error": f'Username "{username}" already exists'}), 409
+
+    admins[username] = password
+    save_admins(admins)
+    return jsonify({"ok": True, "username": username}), 201
 
 @app.route("/logout")
 def logout():
-    # GET /logout → clears the session and redirects to the login page.
-    session.clear()                                     # Destroys all session data including the logged_in flag
-    return redirect(url_for("login"))                   # Sends the browser back to /login
+    session.clear()
+    return redirect(url_for("login"))
 
-# ── Public routes (no login required) ─────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# PUBLIC ROUTES
+# ══════════════════════════════════════════════════════════════════════════════
 
 @app.route("/")
 def index():
     now = datetime.now().strftime("%d %b %Y, %H:%M")
-    return render_template("index.html", now=now)       # Dashboard is public — anyone can view it
+    return render_template("index.html", now=now)
 
 @app.route("/api/summary")
 def api_summary():
@@ -198,16 +222,20 @@ def api_roster():
     data = load_data()
     return jsonify({"roster": build_roster(data["team"]), "weekdays": WEEKDAYS})
 
-# ── Protected admin routes (login required) ────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# PROTECTED ADMIN ROUTES
+# ══════════════════════════════════════════════════════════════════════════════
 
 @app.route("/admin")
-@login_required                                         # @login_required redirects to /login if not authenticated
+@login_required
 def admin():
-    username = session.get("username", "Admin")         # Gets the logged-in username to display in the admin header
-    return render_template("admin.html", username=username)  # Passes the username to the template
+    username = session.get("username", "Admin")
+    admins   = load_admins()
+    admin_count = len(admins)
+    return render_template("admin.html", username=username, admin_count=admin_count)
 
 @app.route("/api/admin/server", methods=["POST"])
-@api_login_required                                     # Returns 401 JSON if not authenticated (instead of redirect)
+@api_login_required
 def add_server():
     body = request.get_json(force=True)
     data = load_data()
@@ -244,9 +272,8 @@ def update_server(sid):
 @api_login_required
 def delete_server(sid):
     data = load_data()
-    inv = [s for s in data["inventory"] if s["id"] != sid]
-    if len(inv) == len(data["inventory"]):
-        abort(404)
+    inv  = [s for s in data["inventory"] if s["id"] != sid]
+    if len(inv) == len(data["inventory"]): abort(404)
     removed_hn = next((s["hostname"] for s in data["inventory"] if s["id"] == sid), None)
     data["inventory"] = inv
     if removed_hn:
@@ -281,8 +308,7 @@ def update_member(emp_id):
 def delete_member(emp_id):
     data = load_data()
     team = [m for m in data["team"] if m["id"] != emp_id]
-    if len(team) == len(data["team"]):
-        abort(404)
+    if len(team) == len(data["team"]): abort(404)
     data["team"] = team
     save_data(data)
     return jsonify({"ok": True})
