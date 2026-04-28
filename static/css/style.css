@@ -1,834 +1,203 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   style.css  —  Server Monitoring Dashboard Stylesheet
-   Project  : SMP / SCMS Server Monitoring System
-   SRS Ref  : §3.1 Layer 1 (Presentation / UI Layer)
+   style.css — Unified Theme-Ready Stylesheet
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── CSS CUSTOM PROPERTIES (Design Tokens) ───────────────────────────────────
-   Defined on :root so every element can inherit them.
-   Changing a token here updates the entire color scheme in one place.         */
-:root {
-  --bg-page:       #0d1117;   /* Page background: very dark navy — sets the dark-theme base */
-  --bg-sidebar:    #0a0e14;   /* Sidebar background: slightly darker than page for visual separation */
-  --bg-card:       #161b22;   /* Card/panel background: dark grey lifted from the page background */
-  --bg-table-alt:  #1c2128;   /* Alternating table row: subtle tint for zebra-stripe readability */
-  --bg-input:      #21262d;   /* Input field background: dark container for text inputs */
-  --border:        #30363d;   /* Border color: muted grey divider used on cards, rows, sidebar */
-  --border-light:  #21262d;   /* Lighter border variant used for inner table row dividers */
+/* ── 1. DESIGN TOKENS (Variables) ────────────────────────────────────────── */
+:root, [data-theme="dark"] {
+  /* Backgrounds */
+  --bg-page:       #060b14;
+  --bg-sidebar:    #0d1520;
+  --bg-card:       #111d2e;
+  --bg-surface:    #16253b;
+  --bg-input:      #0d1520;
+  
+  /* Borders & Dividers */
+  --border:        #1e3050;
+  --border-light:  #254068;
+  
+  /* Text Colors */
+  --text-main:     #e2e8f0;
+  --text-muted:    #94a3b8;
+  --text-dim:      #475569;
+  
+  /* Accents */
+  --accent:        #3b82f6;
+  --accent-soft:   rgba(59, 130, 246, 0.1);
+  --success:       #10b981;
+  --warning:       #f59e0b;
+  --danger:        #ef4444;
 
+  /* Shadows */
+  --shadow:        0 10px 30px rgba(0, 0, 0, 0.5);
+  --topbar-bg:     rgba(13, 21, 32, 0.8);
+}
 
-/* Then use them in your elements */
+[data-theme="light"] {
+  /* Backgrounds */
+  --bg-page:       #f8fafc;
+  --bg-sidebar:    #ffffff;
+  --bg-card:       #ffffff;
+  --bg-surface:    #f1f5f9;
+  --bg-input:      #f8fafc;
+  
+  /* Borders & Dividers */
+  --border:        #e2e8f0;
+  --border-light:  #f1f5f9;
+  
+  /* Text Colors */
+  --text-main:     #0f172a;
+  --text-muted:    #64748b;
+  --text-dim:      #94a3b8;
+  
+  /* Shadows */
+  --shadow:        0 10px 30px rgba(0, 0, 0, 0.05);
+  --topbar-bg:     rgba(255, 255, 255, 0.8);
+}
+
+/* ── 2. GLOBAL RESET & BASE ──────────────────────────────────────────────── */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
-  background-color: var(--bg-primary);
+  background: var(--bg-page);
   color: var(--text-main);
-}
-  --accent-blue:   #58a6ff;   /* Primary accent: bright blue for active nav items and links */
-  --accent-green:  #3fb950;   /* Success/active status: green for "Active" badges and normal disk */
-  --accent-amber:  #d29922;   /* Warning status: amber/gold for "Warning" badges and mid-disk usage */
-  --accent-red:    #f85149;   /* Critical/error status: red for "Inactive" and critical disk alerts */
-  --accent-purple: #bc8cff;   /* Secondary accent: purple for high-disk stat card borders */
-  --accent-teal:   #39d353;   /* Highlight teal: used for the pulsing "live" dot in the sidebar */
-
-  --text-primary:   #e6edf3;  /* Main body text: near-white for high contrast on dark background */
-  --text-secondary: #8b949e;  /* Muted/secondary text: grey for subtitles, placeholders, metadata */
-  --text-muted:     #484f58;  /* Heavily muted text: used for disabled states or very secondary info */
-
-  --font-ui:   'Syne', sans-serif;          /* UI font: geometric sans-serif for headings and labels */
-  --font-mono: 'JetBrains Mono', monospace; /* Mono font: for IP addresses, hostnames, and code values */
-
-  --radius-sm: 6px;    /* Small border-radius: applied to badges, pills, and small elements */
-  --radius-md: 10px;   /* Medium border-radius: applied to cards and input fields */
-  --radius-lg: 14px;   /* Large border-radius: applied to the sidebar and large containers */
-
-  --shadow:    0 4px 24px rgba(0,0,0,0.4);  /* Standard card shadow: depth lift for elevated surfaces */
-  --transition: all 0.2s ease;              /* Default CSS transition: smooth 200ms ease for hover states */
+  font-family: 'Inter', 'Syne', sans-serif;
+  transition: background 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
 }
 
-/* ── RESET & BASE STYLES ──────────────────────────────────────────────────── */
-
-*, *::before, *::after {
-  box-sizing: border-box;   /* Ensures padding and border are included in element dimensions, not added on top */
-  margin: 0;                /* Removes default browser margin from all elements */
-  padding: 0;               /* Removes default browser padding from all elements */
-}
-
-html {
-  scroll-behavior: smooth;  /* Enables smooth scrolling when navigating to anchor links */
-}
-
-body {
-  font-family: var(--font-ui);            /* Applies the Syne geometric font as the base UI typeface */
-  background-color: var(--bg-page);       /* Sets the page background to the dark navy design token */
-  color: var(--text-primary);             /* Sets default text to near-white for dark-theme legibility */
-  font-size: 14px;                        /* Base font size — most measurements scale from this value */
-  line-height: 1.6;                       /* Line height for comfortable reading in tables and descriptions */
-  -webkit-font-smoothing: antialiased;    /* Smoother font rendering on macOS/iOS (subpixel antialiasing off) */
-  -moz-osx-font-smoothing: grayscale;    /* Grayscale antialiasing on Firefox/macOS for consistent rendering */
-  overflow-x: hidden;                     /* Prevents horizontal scrollbar on the page body from layout overflow */
-}
-
-/* ── SCROLLBAR STYLING ────────────────────────────────────────────────────── */
-
-::-webkit-scrollbar { width: 6px; height: 6px; }
-/* Overrides the default OS scrollbar to a slim 6px track (WebKit browsers: Chrome, Safari, Edge) */
-
-::-webkit-scrollbar-track { background: var(--bg-page); }
-/* Scrollbar track (empty part): matches the dark page background for seamless appearance */
-
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
-/* Scrollbar thumb (draggable part): muted grey pill shape, rounded with full radius */
-
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-/* On hover: slightly lighter thumb color provides interactive visual feedback */
-
-/* ── PAGE LAYOUT ──────────────────────────────────────────────────────────── */
-
-.layout {
-  display: flex;        /* Flex layout: places sidebar and main-content side by side horizontally */
-  min-height: 100vh;    /* Ensures layout spans the full viewport height even with short content */
-}
-
-/* ── SIDEBAR ──────────────────────────────────────────────────────────────── */
+/* ── 3. LAYOUT COMPONENTS ────────────────────────────────────────────────── */
+.layout { display: flex; min-height: 100vh; }
 
 .sidebar {
-  width: 240px;                       /* Fixed sidebar width; main content takes the remaining viewport space */
-  min-height: 100vh;                  /* Sidebar stretches the full page height even if content is short */
-  background: var(--bg-sidebar);      /* Dark sidebar background using the dedicated sidebar color token */
-  border-right: 1px solid var(--border); /* Subtle right border separates sidebar from main content */
-  display: flex;                      /* Flex column: stacks header, nav, and footer vertically */
-  flex-direction: column;             /* Items arranged top-to-bottom */
-  position: sticky;                   /* Stays in place as the user scrolls main content */
-  top: 0;                             /* Sticks to the top of the viewport */
-  height: 100vh;                      /* Limits height to viewport so sidebar itself can scroll independently */
-  overflow-y: auto;                   /* Allows sidebar to scroll internally if nav items exceed viewport height */
-  z-index: 100;                       /* Ensures sidebar appears above content when in mobile overlay mode */
-  transition: var(--transition);      /* Smooth transition for mobile open/close slide animation */
-  flex-shrink: 0;                     /* Prevents sidebar from shrinking when main content is wide */
+  width: 260px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  transition: background 0.3s ease;
 }
-
-/* Sidebar Header: brand identity block at top of sidebar */
-.sidebar-header {
-  display: flex;            /* Flex row: icon block and text block side by side */
-  align-items: center;      /* Vertically centers the icon and brand text */
-  gap: 12px;                /* 12px gap between the brand icon container and brand text */
-  padding: 24px 20px;       /* 24px top/bottom, 20px left/right — generous spacing for the brand area */
-  border-bottom: 1px solid var(--border);  /* Divider line below the header separating it from the nav */
-}
-
-.brand-icon {
-  width: 40px;                          /* Fixed square size for the icon container */
-  height: 40px;                         /* Fixed square height matches width for a perfect square */
-  background: linear-gradient(135deg, #1f6feb, #58a6ff);  /* Blue diagonal gradient for the icon badge */
-  border-radius: var(--radius-sm);      /* Rounded corners matching the small radius token */
-  display: flex;                        /* Flex centering for the icon inside the badge */
-  align-items: center;                  /* Vertically centers the icon */
-  justify-content: center;              /* Horizontally centers the icon */
-  font-size: 16px;                      /* Icon size inside the brand badge */
-  color: white;                         /* White icon color for contrast on the blue gradient */
-  position: relative;                   /* Establishes positioning context for the pulse-dot overlay */
-}
-
-/* Animated green pulsing dot in top-right of brand icon to signal live status */
-.pulse-dot {
-  width: 8px;                           /* Small dot size */
-  height: 8px;                          /* Same as width for a perfect circle */
-  background: var(--accent-teal);       /* Teal/green color signals the system is live and running */
-  border-radius: 50%;                   /* Full radius makes it a circle */
-  position: absolute;                   /* Positioned absolutely within the brand-icon container */
-  top: -2px;                            /* Overlaps the top edge of the icon badge */
-  right: -2px;                          /* Overlaps the right edge of the icon badge */
-  animation: pulse 2s infinite;         /* Loops the pulse animation every 2 seconds indefinitely */
-}
-
-/* Keyframe animation: makes the pulse dot expand and fade to simulate a heartbeat / live signal */
-@keyframes pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(57,211,83,0.7); }    /* Start: tight glow ring at full opacity */
-  70%  { box-shadow: 0 0 0 8px rgba(57,211,83,0);  }   /* Mid: ring expands to 8px and becomes transparent */
-  100% { box-shadow: 0 0 0 0 rgba(57,211,83,0);   }    /* End: ring collapses back, ready to repeat */
-}
-
-.brand-text {
-  display: flex;          /* Flex column: stacks label and title vertically */
-  flex-direction: column; /* Items arranged top-to-bottom */
-  gap: 2px;               /* 2px gap between label and title for tight grouping */
-}
-
-.brand-label {
-  font-size: 10px;                      /* Very small uppercase label text */
-  font-weight: 700;                     /* Bold weight for the small label */
-  color: var(--text-muted);            /* Muted color makes it secondary to the title */
-  letter-spacing: 1.5px;               /* Wide letter-spacing gives the label an administrative/monogram feel */
-  text-transform: uppercase;            /* Forces uppercase regardless of source text */
-}
-
-.brand-title {
-  font-size: 18px;                      /* Large prominent title font */
-  font-weight: 800;                     /* Extra-bold weight for strong brand identity */
-  color: var(--text-primary);           /* Near-white color for maximum contrast */
-  letter-spacing: -0.5px;              /* Slightly tighter tracking for the large title */
-}
-
-/* Navigation links in sidebar */
-.sidebar-nav {
-  flex: 1;                      /* Takes all remaining vertical space between header and footer */
-  padding: 16px 12px;           /* 16px top/bottom, 12px left/right inner spacing for the nav block */
-  display: flex;                /* Flex column: stacks nav links vertically */
-  flex-direction: column;       /* Items arranged top-to-bottom */
-  gap: 4px;                     /* 4px gap between each nav link button */
-}
-
-.nav-link {
-  display: flex;                    /* Flex row: aligns icon and text label side by side */
-  align-items: center;              /* Vertically centers icon and text */
-  gap: 12px;                        /* 12px gap between the icon and label text */
-  padding: 11px 14px;               /* 11px top/bottom, 14px left/right — comfortable click target */
-  border-radius: var(--radius-sm);  /* Rounded corners for the nav item pill shape */
-  color: var(--text-secondary);     /* Muted grey for inactive nav items */
-  text-decoration: none;            /* Removes the default underline from anchor tags */
-  font-size: 13.5px;               /* Slightly smaller than body text for compact sidebar nav */
-  font-weight: 600;                 /* Semi-bold weight for readable nav labels */
-  transition: var(--transition);    /* Smooth color and background change on hover/active */
-  letter-spacing: 0.2px;           /* Slight letter-spacing for clean nav label readability */
-}
-
-.nav-link i {
-  width: 18px;                /* Fixed icon width ensures all labels align consistently */
-  text-align: center;         /* Centers icon glyphs within their fixed-width container */
-  font-size: 14px;            /* Icon glyph size slightly smaller than text for visual balance */
-}
-
-/* Hover state: highlights nav item background and brightens the text color */
-.nav-link:hover {
-  background: rgba(88,166,255,0.08);  /* Very subtle blue tint background on hover */
-  color: var(--accent-blue);           /* Bright blue text color on hover to signal interactivity */
-}
-
-/* Active (selected) state: fully highlighted with opaque blue background */
-.nav-link.active {
-  background: rgba(88,166,255,0.15);  /* More opaque blue fill marks this as the current page */
-  color: var(--accent-blue);           /* Blue text matches the active background accent */
-}
-
-.nav-link.active i {
-  color: var(--accent-blue);  /* Icon also turns blue on the active state to reinforce selection */
-}
-
-/* Sidebar footer: institution credit at the bottom */
-.sidebar-footer {
-  padding: 16px 20px;                   /* 16px top/bottom, 20px left/right — matches header padding */
-  border-top: 1px solid var(--border);  /* Divider above the footer separating it from the nav */
-  display: flex;                        /* Flex row: aligns university icon and text side by side */
-  align-items: flex-start;             /* Aligns icon to the top of the text block */
-  gap: 10px;                            /* 10px gap between icon and institution name */
-  color: var(--text-muted);            /* Muted color — footer is informational, not interactive */
-  font-size: 11px;                      /* Very small font for the footer attribution text */
-  line-height: 1.5;                     /* Slightly increased line height for the two-line institution text */
-}
-
-.sidebar-footer i {
-  margin-top: 2px;    /* Slight top nudge aligns the icon with the first text line */
-  font-size: 13px;    /* Slightly larger than the text for visual accent without dominating */
-}
-
-/* ── MAIN CONTENT AREA ────────────────────────────────────────────────────── */
 
 .main-content {
-  flex: 1;            /* Takes all horizontal space to the right of the sidebar */
-  display: flex;      /* Flex column: stacks topbar and content-wrapper vertically */
-  flex-direction: column;  /* Items arranged top-to-bottom */
-  min-width: 0;       /* Prevents flex child from overflowing its container on narrow screens */
-  overflow: hidden;   /* Clips content that would overflow the main-content boundary */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
 }
-
-/* ── TOPBAR ───────────────────────────────────────────────────────────────── */
 
 .topbar {
-  display: flex;                    /* Flex row: splits topbar into left and right groups */
-  align-items: center;              /* Vertically centers all topbar children */
-  justify-content: space-between;   /* Pushes left group to start edge, right group to end edge */
-  padding: 0 28px;                  /* 0 top/bottom, 28px left/right — matches content-wrapper padding */
-  height: 64px;                     /* Fixed topbar height — leaves consistent space below the nav */
-  border-bottom: 1px solid var(--border);  /* Bottom border separates topbar from page content */
-  background: var(--bg-card);       /* Slightly lighter than the page — visually elevates the topbar */
-  position: sticky;                 /* Stays fixed at the top of main-content while content scrolls below */
-  top: 0;                           /* Sticks to the top of the main-content container */
-  z-index: 50;                      /* Appears above scrolling content cards but below the sidebar */
+  height: 70px;
+  background: var(--topbar-bg);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-.topbar-left {
-  display: flex;      /* Flex row: aligns the mobile menu button and page title horizontally */
-  align-items: center;/* Vertically centers the button and title */
-  gap: 16px;          /* 16px gap between the mobile menu toggle and the page title */
+/* ── 4. CARDS & SECTIONS ─────────────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+  transition: transform 0.2s ease, background 0.3s ease;
 }
 
-/* Mobile hamburger menu toggle — hidden on desktop, visible on small screens */
-.menu-toggle {
-  display: none;                    /* Hidden by default on desktop (shown via media query on mobile) */
-  background: none;                 /* Transparent background — no button chrome */
-  border: 1px solid var(--border);  /* Subtle border gives it a clickable button appearance */
-  color: var(--text-secondary);     /* Muted icon color */
-  padding: 8px 10px;                /* Comfortable padding around the hamburger icon */
-  border-radius: var(--radius-sm);  /* Rounded corners to match other UI elements */
-  cursor: pointer;                  /* Pointer cursor signals it's interactive */
-  font-size: 14px;                  /* Icon size */
-}
-
-.page-title {
-  font-size: 18px;        /* Section heading in the topbar — prominent but smaller than card headings */
-  font-weight: 700;       /* Bold weight for strong visual hierarchy */
-  color: var(--text-primary);  /* Near-white text for maximum legibility */
-}
-
-.topbar-right {
-  display: flex;      /* Flex row: could hold multiple topbar widgets (currently just the time) */
-  align-items: center;/* Vertically centers all topbar-right children */
-  gap: 16px;          /* Gap between future topbar widget additions */
-}
-
-.topbar-time {
-  display: flex;                   /* Flex row: clock icon and time text side by side */
-  align-items: center;             /* Vertically centers icon and text */
-  gap: 8px;                        /* 8px gap between clock icon and timestamp text */
-  color: var(--text-secondary);    /* Muted secondary color — informational, not interactive */
-  font-size: 13px;                 /* Smaller size — secondary information in the topbar */
-  font-family: var(--font-mono);   /* Monospace font for the timestamp (aligns colons/digits consistently) */
-  background: var(--bg-input);     /* Dark input-field background creates a pill/chip for the time display */
-  padding: 6px 14px;              /* Compact padding inside the time chip */
-  border-radius: 99px;             /* Full radius makes this a pill/capsule shape */
-  border: 1px solid var(--border); /* Subtle border adds definition to the time chip */
-}
-
-/* ── CONTENT WRAPPER ──────────────────────────────────────────────────────── */
-
-.content-wrapper {
-  flex: 1;            /* Fills all remaining vertical space below the topbar */
-  padding: 28px;      /* 28px padding on all sides between the browser edge and card content */
-  overflow-y: auto;   /* Allows the content area to scroll independently from the sticky topbar */
-}
-
-/* ── SECTION VISIBILITY ───────────────────────────────────────────────────── */
-
-/* All content sections are hidden by default using display:none */
-.content-section {
-  display: none;                    /* Hidden: JS switches sections by toggling this class */
-  animation: fadeIn 0.25s ease;    /* On activation, section fades in smoothly */
-  max-width: 1300px;                /* Caps content width on very wide screens for readability */
-}
-
-/* Only the section with class "active" is shown */
-.content-section.active {
-  display: block;   /* Overrides display:none to make this section visible */
-}
-
-/* Fade-in keyframe: newly activated sections fade from transparent to fully visible */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }  /* Start: invisible, shifted down 8px */
-  to   { opacity: 1; transform: translateY(0);    }  /* End: fully visible, at natural position */
-}
-
-/* ── SECTION HEADER ───────────────────────────────────────────────────────── */
-
-.section-header {
-  margin-bottom: 24px;  /* 24px space below the header before the first card or filter controls */
-}
+.card:hover { transform: translateY(-2px); }
 
 .section-header h2 {
-  font-size: 22px;               /* Large heading for the section title displayed at the top of each page */
-  font-weight: 800;              /* Extra-bold for strong visual hierarchy */
-  color: var(--text-primary);   /* Near-white for maximum contrast on dark background */
-  margin-bottom: 4px;            /* Small gap between the heading and subtitle text */
+  font-family: 'Syne', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
 }
 
-.section-header p {
-  font-size: 13px;               /* Smaller body text for the subtitle description */
-  color: var(--text-secondary);  /* Muted grey for secondary descriptive text */
-}
+.section-header p { color: var(--text-muted); font-size: 14px; }
 
-/* ── CARDS ────────────────────────────────────────────────────────────────── */
-
-.card {
-  background: var(--bg-card);       /* Dark card surface lifted from the page background */
-  border: 1px solid var(--border);  /* Subtle border defines the card boundary on dark backgrounds */
-  border-radius: var(--radius-md);  /* Medium rounded corners for a modern card look */
-  margin-bottom: 20px;              /* Vertical spacing between stacked cards */
-  box-shadow: var(--shadow);        /* Drop shadow provides visual depth and elevation */
-  overflow: hidden;                 /* Clips child content to card's rounded borders */
-}
-
-.card-header {
-  padding: 18px 24px;                   /* 18px top/bottom, 24px left/right — generous card title spacing */
-  border-bottom: 1px solid var(--border); /* Divider line between the header and card body */
-}
-
-.card-header h3 {
-  font-size: 15px;               /* Card title font size — smaller than section headings */
-  font-weight: 700;              /* Bold for clear hierarchy within the card */
-  color: var(--text-primary);   /* Near-white color for card titles */
-  display: flex;                 /* Flex row: aligns icon and title text */
-  align-items: center;           /* Vertically centers icon with title */
-  gap: 10px;                     /* 10px gap between the Font Awesome icon and title text */
-}
-
-.card-body {
-  padding: 20px 24px;  /* Inner padding for card body content — matches header padding horizontally */
-}
-
-/* ── STAT CARDS (KPI Cards on Overview) ──────────────────────────────────── */
-
-.stat-cards {
-  display: flex;      /* Flex row: stat cards laid out horizontally */
-  gap: 16px;          /* 16px gap between each stat card */
-  flex-wrap: wrap;    /* Cards wrap to the next line on narrow screens */
-  margin-bottom: 20px;/* Space below the stat card row before the next section */
-}
-
-.stat-card {
-  background: var(--bg-card);       /* Dark card background matching the card design token */
-  border: 1px solid var(--border);  /* Card border */
-  border-radius: var(--radius-md);  /* Rounded corners */
-  padding: 20px 22px;               /* Inner padding for the stat card content */
-  flex: 1;                          /* Each stat card grows equally to fill available space */
-  min-width: 160px;                 /* Minimum width before cards wrap to the next line */
-  box-shadow: var(--shadow);        /* Drop shadow for depth */
-  border-left: 4px solid;          /* Left border accent — color set per card via inline style */
-  transition: var(--transition);    /* Smooth hover lift transition */
-}
-
-/* Hover state: lifts the card upward and intensifies the shadow */
-.stat-card:hover {
-  transform: translateY(-2px);              /* Shifts card 2px upward — subtle lift effect */
-  box-shadow: 0 8px 30px rgba(0,0,0,0.5); /* Larger, darker shadow reinforces the lifted appearance */
-}
-
-.stat-card .stat-icon {
-  font-size: 22px;    /* Large emoji icon representing the stat category */
-  margin-bottom: 8px; /* Space below the icon before the numeric value */
-}
-
-.stat-card .stat-value {
-  font-size: 32px;              /* Very large numeric value — the primary focus of each stat card */
-  font-weight: 800;             /* Extra-bold for strong visual impact */
-  color: var(--text-primary);  /* Near-white for maximum contrast */
-  line-height: 1;               /* Tight line height so value and label sit close together */
-  margin-bottom: 4px;           /* Small gap between value and label */
-}
-
-.stat-card .stat-label {
-  font-size: 12px;               /* Small label text below the numeric value */
-  font-weight: 600;              /* Semi-bold for readability at small size */
-  color: var(--text-secondary);  /* Muted grey — secondary to the main value */
-}
-
-.stat-card .stat-sub {
-  font-size: 11px;               /* Very small subtitle, further subordinate to the label */
-  color: var(--text-muted);     /* Heavily muted color — least important text in the card hierarchy */
-  margin-top: 2px;               /* Tiny gap between label and subtitle */
-}
-
-/* ── DISK SUMMARY BARS (Overview mini-chart) ──────────────────────────────── */
-
-.disk-bar-row {
-  margin-bottom: 14px;  /* Vertical spacing between individual disk bar rows */
-}
-
-.disk-bar-label {
-  display: flex;                   /* Flex row: hostname on the left, stats on the right */
-  justify-content: space-between;  /* Pushes hostname to start, stats to end */
-  margin-bottom: 6px;              /* Space between the label row and the progress bar below it */
-  font-size: 12px;                 /* Small font for the per-server disk bar labels */
-}
-
-.disk-bar-label .hostname {
-  font-family: var(--font-mono);   /* Monospace for hostnames — consistent character width */
-  font-weight: 600;                /* Semi-bold hostname for easy scanning */
-  color: var(--text-primary);     /* Near-white for readability */
-}
-
-.disk-bar-label .stats {
-  font-family: var(--font-mono);  /* Monospace for the GB values and percentage */
-  font-weight: 700;               /* Bold stats text — important data point */
-}
-
-/* Progress bar track (grey background container) */
-.progress-track {
-  background: var(--border);  /* Dark grey track background contrasts with the colored fill */
-  border-radius: 99px;        /* Full radius makes the track a rounded pill shape */
-  height: 8px;                /* Compact 8px height for the mini progress bars */
-  overflow: hidden;           /* Clips the fill bar to the track's rounded borders */
-}
-
-/* Progress bar fill (colored indicator) */
-.progress-fill {
-  height: 100%;       /* Fills the full height of the track container */
-  border-radius: 99px;/* Matches track's rounded pill shape */
-  transition: width 0.6s ease;  /* Animates width change smoothly when data updates */
-}
-
-/* Severity color classes applied to both the fill and stats text */
-.critical { color: var(--accent-red);   }  /* Red: disk at or above 85% — critical threshold */
-.warning  { color: var(--accent-amber); }  /* Amber: disk at 65–84% — warning threshold */
-.normal   { color: var(--accent-green); }  /* Green: disk below 65% — normal/healthy range */
-
-.fill-critical { background: var(--accent-red);   }  /* Red fill for critical progress bars */
-.fill-warning  { background: var(--accent-amber); }  /* Amber fill for warning progress bars */
-.fill-normal   { background: var(--accent-green); }  /* Green fill for normal progress bars */
-
-/* ── ENVIRONMENT TILES (Overview section) ─────────────────────────────────── */
-
-.env-tiles {
-  display: flex;    /* Flex row: environment count tiles laid out horizontally */
-  gap: 12px;        /* 12px gap between each environment tile */
-  flex-wrap: wrap;  /* Tiles wrap to the next line if the container is too narrow */
-}
-
-.env-tile {
-  background: var(--bg-input);      /* Slightly lighter than card background — subtle surface lift */
-  border: 1px solid var(--border);  /* Standard card border */
-  border-radius: var(--radius-sm);  /* Small radius for the compact tile shape */
-  padding: 14px 22px;               /* Inner padding for the count and label */
-  min-width: 100px;                 /* Ensures tiles don't collapse too small */
-  border-top: 3px solid;           /* Top accent border — color set per tile via inline style */
-}
-
-.env-tile .env-count {
-  font-size: 24px;     /* Large bold number showing the server count per environment */
-  font-weight: 800;    /* Extra-bold for numeric emphasis */
-  line-height: 1;      /* Tight line height so count and label are visually close */
-  margin-bottom: 4px;  /* Small gap between the count number and the label below */
-}
-
-.env-tile .env-label {
-  font-size: 11px;               /* Small label showing the environment name */
-  color: var(--text-secondary);  /* Muted grey — secondary to the count number */
-  font-weight: 600;              /* Semi-bold for legibility at small size */
-  letter-spacing: 0.5px;        /* Slight tracking for small-caps style appearance */
-}
-
-/* ── FILTER CONTROLS ──────────────────────────────────────────────────────── */
-
-.filters {
-  display: flex;       /* Flex row: filter pills and search box side by side */
-  align-items: center; /* Vertically centers pills and input */
-  gap: 12px;           /* 12px gap between the pill group and the search box */
-  flex-wrap: wrap;     /* Wraps to the next line on mobile */
-  margin-bottom: 16px; /* Space below the filter controls before the table card */
-}
-
-.filter-pills {
-  display: flex;  /* Flex row: individual pill buttons in a horizontal row */
-  gap: 8px;       /* 8px gap between pill buttons */
-  flex-wrap: wrap;/* Wraps if there are too many pills for the container width */
-}
-
-.pill-btn {
-  padding: 6px 16px;                /* Comfortable click target for the environment filter pills */
-  border-radius: 99px;              /* Full radius creates a true pill/capsule shape */
-  border: 1.5px solid var(--border);/* Visible border on inactive pills */
-  background: transparent;          /* Transparent background for inactive state */
-  color: var(--text-secondary);    /* Muted text for inactive pills */
-  cursor: pointer;                  /* Pointer cursor signals the pill is clickable */
-  font-size: 12.5px;               /* Compact font size for filter labels */
-  font-weight: 600;                 /* Semi-bold for readable pill text */
-  font-family: var(--font-ui);     /* Ensures consistent font across dynamically created buttons */
-  transition: var(--transition);    /* Smooth background/color transition on hover and selection */
-}
-
-/* Hover: subtle blue tint before selection */
-.pill-btn:hover {
-  border-color: var(--accent-blue);         /* Blue border on hover signals upcoming selection */
-  color: var(--accent-blue);               /* Blue text on hover */
-  background: rgba(88,166,255,0.1);        /* Faint blue fill on hover */
-}
-
-/* Active: filled button shows this environment is currently selected */
-.pill-btn.active {
-  color: white;                             /* White text for contrast on the colored background */
-  border-color: transparent;               /* Hides the border when background is filled */
-}
-
-/* Search box container: styled input with icon */
-.search-box {
-  display: flex;                    /* Flex row: magnifier icon and input side by side */
-  align-items: center;              /* Vertically centers icon and input text */
-  gap: 8px;                         /* Gap between the magnifier icon and the text input */
-  background: var(--bg-input);      /* Dark input background */
-  border: 1px solid var(--border);  /* Input field border */
-  border-radius: 99px;              /* Pill-shaped search box */
-  padding: 7px 16px;                /* Comfortable padding around icon and input */
-  margin-left: auto;                /* Pushes search box to the right end of the filters row */
-}
-
-.search-box i {
-  color: var(--text-muted);  /* Muted magnifier icon — decorative, not interactive */
-  font-size: 12px;           /* Small icon size to match the compact input */
-}
-
-.search-box input {
-  background: none;                   /* Transparent — inherits the search-box background */
-  border: none;                       /* No border — parent container provides the border */
-  outline: none;                      /* Removes the default browser focus ring (replaced by CSS below) */
-  color: var(--text-primary);         /* Near-white text for typed search query */
-  font-size: 13px;                    /* Matches the pill button font size for visual consistency */
-  font-family: var(--font-ui);        /* Consistent UI font for the search input */
-  width: 220px;                       /* Fixed width for the search input field */
-}
-
-.search-box input::placeholder {
-  color: var(--text-muted);  /* Muted placeholder text — lighter than actual typed input */
-}
-
-/* ── DATA TABLES ──────────────────────────────────────────────────────────── */
-
-.table-card {
-  padding: 0;  /* Removes card body padding so the table fills edge-to-edge within the card */
-}
-
-.table-responsive {
-  overflow-x: auto;  /* Enables horizontal scrolling when table columns exceed container width */
-}
+/* ── 5. TABLES ───────────────────────────────────────────────────────────── */
+.table-responsive { overflow-x: auto; border-radius: 12px; }
 
 .data-table {
-  width: 100%;          /* Full width of the card container */
-  border-collapse: collapse;  /* Merges adjacent cell borders into single lines */
-  font-size: 13px;      /* Compact font size for dense tabular data */
-}
-
-.data-table thead tr {
-  background: #161b22;       /* Dark header row background — slightly different from body rows */
-  border-bottom: 2px solid var(--accent-blue);  /* Bold blue bottom border emphasises the header */
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
 }
 
 .data-table th {
-  padding: 13px 16px;             /* Cell padding for comfortable header readability */
-  text-align: left;               /* Left-aligns all header text by default */
-  font-size: 11px;                /* Very small caps-style header labels */
-  font-weight: 700;               /* Bold weight for column headings */
-  color: var(--text-muted);      /* Muted color for headers — subordinate to the data rows below */
-  letter-spacing: 0.8px;         /* Wide letter-spacing gives table headers an administrative feel */
-  text-transform: uppercase;      /* All-caps column headings for standard table conventions */
-  white-space: nowrap;           /* Prevents column headings from wrapping to a second line */
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  padding: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
 }
 
 .data-table td {
-  padding: 12px 16px;            /* Cell padding — generous enough for comfortable data reading */
-  border-bottom: 1px solid var(--border-light);  /* Subtle row dividers between data rows */
-  color: var(--text-primary);   /* Near-white text for table cell data */
-  vertical-align: middle;        /* Centers cell content vertically within the row */
+  padding: 16px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-main);
 }
 
-/* Alternating row background (zebra stripes) for easier row tracking across wide tables */
-.data-table tbody tr:nth-child(even) {
-  background: var(--bg-table-alt);  /* Even rows get a subtle dark tint to create the zebra pattern */
+.data-table tr:hover { background: var(--bg-surface); }
+
+/* ── 6. UI ELEMENTS (Pills, Buttons, Inputs) ─────────────────────────────── */
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
-/* Hover: row highlights to help user track across a wide table */
-.data-table tbody tr:hover {
-  background: rgba(88,166,255,0.06);  /* Very subtle blue tint on row hover */
+.nav-link.active, .nav-link:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
-/* Monospace cells for IP addresses, hostnames, and other technical values */
-.mono {
-  font-family: var(--font-mono);  /* JetBrains Mono for code-like cell values */
-  font-size: 12.5px;             /* Slightly smaller — monospace glyphs appear larger at the same size */
+input {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 10px 16px;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s;
 }
 
-/* Table footer: "Showing X of Y" result count below the table */
-.table-footer {
-  padding: 12px 16px;            /* Comfortable padding for the footer row */
-  font-size: 12px;               /* Small font for the informational count */
-  color: var(--text-muted);     /* Muted color — secondary information */
-  border-top: 1px solid var(--border);  /* Top border separates the footer from the table body */
+input:focus { border-color: var(--accent); }
+
+/* Status Badges */
+.status-pill {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
-/* ── BADGE / PILL COMPONENTS ──────────────────────────────────────────────── */
+.status-active { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+.status-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+.status-inactive { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
 
-/* Base badge: used for environment labels, status labels, and project name badges */
-.badge {
-  display: inline-flex;           /* Inline-flex so badge wraps tightly around text */
-  align-items: center;            /* Vertically centers text within the badge */
-  padding: 3px 10px;             /* Compact padding for a small pill shape */
-  border-radius: 99px;           /* Full radius for the pill/capsule badge shape */
-  font-size: 11px;               /* Very small text for data-density in tables */
-  font-weight: 700;              /* Bold text for readability at small size */
-  letter-spacing: 0.3px;        /* Slight tracking for small badge text */
+/* ── 7. RESPONSIVE DESIGN ────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .sidebar { width: 80px; }
+  .sidebar span, .brand-text, .sidebar-footer span { display: none; }
 }
 
-/* Status-specific badge color pairs (background + text) */
-.badge-active   { background: rgba(63,185,80,0.15);  color: var(--accent-green); }  /* Green: Active servers */
-.badge-warning  { background: rgba(210,153,34,0.15); color: var(--accent-amber); }  /* Amber: Warning status */
-.badge-inactive { background: rgba(248,81,73,0.15);  color: var(--accent-red);   }  /* Red: Inactive servers */
-
-/* Environment-specific badge colors */
-.badge-prod    { background: rgba(248,81,73,0.1);   color: #f85149; }  /* Production: red — highest criticality */
-.badge-uat     { background: rgba(210,153,34,0.1);  color: #d29922; }  /* UAT: amber — pre-production testing */
-.badge-dr      { background: rgba(188,140,255,0.1); color: #bc8cff; }  /* DR: purple — disaster recovery */
-.badge-dev     { background: rgba(88,166,255,0.1);  color: #58a6ff; }  /* Dev: blue — development environment */
-.badge-smp     { background: rgba(88,166,255,0.12); color: #58a6ff; }  /* SMP team badge: blue */
-.badge-scms    { background: rgba(63,185,80,0.12);  color: #3fb950; }  /* SCMS team badge: green */
-
-/* Disk severity badge (used in the Status column of the disk table) */
-.badge-critical { background: rgba(248,81,73,0.15);  color: var(--accent-red);   }  /* Red: ≥85% utilization */
-.badge-warning-d{ background: rgba(210,153,34,0.15); color: var(--accent-amber); }  /* Amber: 65–84% utilization */
-.badge-normal   { background: rgba(63,185,80,0.15);  color: var(--accent-green); }  /* Green: <65% utilization */
-
-/* ── DISK TABLE PROGRESS BAR ──────────────────────────────────────────────── */
-
-/* Inline bar used inside the Disk Monitoring table Utilization column */
-.bar-cell {
-  display: flex;      /* Flex row: progress bar and percentage label side by side */
-  align-items: center;/* Vertically centers bar and text */
-  gap: 10px;          /* 10px gap between the bar track and the percentage text */
-  min-width: 180px;   /* Minimum width prevents bar from becoming too narrow */
-}
-
-.bar-cell .progress-track {
-  flex: 1;   /* Bar track grows to fill all available space in the cell */
-  height: 10px;  /* Slightly taller than the overview mini bars for better in-table readability */
-}
-
-.bar-cell .pct-label {
-  font-family: var(--font-mono);  /* Monospace for the percentage value */
-  font-size: 12px;               /* Compact size matching the table cell font */
-  font-weight: 700;              /* Bold to emphasise the numeric threshold value */
-  min-width: 38px;               /* Fixed width prevents layout shift as percentage changes */
-  text-align: right;            /* Right-aligns the percentage label for consistent column layout */
-}
-
-/* ── DISK LEGEND ──────────────────────────────────────────────────────────── */
-
-/* Legend row at the top of the Disk Monitoring section */
-.disk-legend {
-  display: flex;    /* Flex row: legend badges in a horizontal row */
-  gap: 12px;        /* 12px gap between each legend badge */
-  flex-wrap: wrap;  /* Wraps on narrow screens */
-  margin-bottom: 16px;  /* Space below the legend before the disk table card */
-}
-
-.legend-badge {
-  display: flex;          /* Flex row: colored circle icon and label side by side */
-  align-items: center;    /* Vertically centers icon and text */
-  gap: 7px;               /* Gap between icon and label */
-  font-size: 12px;        /* Small text for the legend labels */
-  font-weight: 600;       /* Semi-bold for readability */
-  padding: 5px 12px;      /* Compact padding for the legend badge */
-  border-radius: 99px;    /* Full radius pill shape */
-}
-
-/* Color variants for the three legend badges — background tints matching severity */
-.legend-badge.critical { background: rgba(248,81,73,0.12);  color: var(--accent-red);   }
-.legend-badge.warning  { background: rgba(210,153,34,0.12); color: var(--accent-amber); }
-.legend-badge.normal   { background: rgba(63,185,80,0.12);  color: var(--accent-green); }
-
-/* ── ROSTER / SHIFT LEGEND ────────────────────────────────────────────────── */
-
-/* Legend row at the top of the Team Roster section */
-.shift-legend {
-  display: flex;       /* Flex row: shift badges in a horizontal row */
-  gap: 8px;            /* 8px gap between each shift badge */
-  flex-wrap: wrap;     /* Wraps to next line if all shift types don't fit in one row */
-  margin-bottom: 16px; /* Space below the legend before the roster calendar card */
-}
-
-.shift-badge {
-  padding: 4px 12px;     /* Compact padding for shift legend badges */
-  border-radius: 99px;   /* Full radius pill shape */
-  font-size: 11.5px;    /* Small text for compact legend */
-  font-weight: 700;      /* Bold for readability at small size */
-}
-
-/* ── ROSTER TABLE ─────────────────────────────────────────────────────────── */
-
-/* Override specific styles for the compact 31-column roster calendar table */
-.roster-table th,
-.roster-table td {
-  padding: 5px 4px;   /* Very compact padding — 31 columns must fit in the table width */
-  text-align: center; /* Center-aligns all roster cells (day numbers and shift code badges) */
-  min-width: 34px;    /* Minimum column width ensures shift badges fit without overflow */
-}
-
-.roster-table th:first-child,
-.roster-table td:first-child {
-  text-align: left;             /* Left-aligns the Name column (first column only) */
-  padding-left: 16px;           /* Extra left padding for the name column */
-  min-width: 110px;             /* Wider minimum width for names vs. day columns */
-  position: sticky;             /* Sticky: Name column stays fixed when scrolling right */
-  left: 0;                      /* Sticks to the left edge of the scrollable table */
-  background: var(--bg-card);   /* Matches card background to cover scrolled content behind it */
-  z-index: 2;                   /* Appears above scrolled row cells */
-  font-weight: 600;             /* Bold name for easy row identification */
-  font-size: 12px;              /* Slightly larger than shift cells for name legibility */
-  white-space: nowrap;         /* Prevents names from wrapping mid-scroll */
-}
-
-/* Sticky thead row stays above data rows when scrolling vertically */
-.roster-table thead th {
-  position: sticky;   /* Sticks the entire header row to the top during vertical scroll */
-  top: 0;             /* Sticks at the top of the scrolling container */
-  z-index: 3;         /* Above sticky name column cells */
-  background: #161b22;/* Dark background covers scrolled content behind the header */
-}
-
-/* Weekend column header: darker background distinguishes Sat/Sun from weekdays */
-.roster-table th.weekend {
-  background: #0d1117;  /* Even darker than the regular header for clear weekend distinction */
-}
-
-/* Weekend data cells: slightly different tint from weekday cells */
-.roster-table td.weekend {
-  background: rgba(0,0,0,0.15);  /* Subtle dark overlay on weekend cells */
-}
-
-/* Shift cell: the small colored pill showing the shift code */
-.shift-cell {
-  display: inline-block;  /* Inline-block allows padding and min-width on a span */
-  padding: 2px 4px;       /* Compact padding around the shift code text */
-  border-radius: 4px;     /* Slight rounding for the tiny shift cell */
-  font-size: 10px;        /* Very small text for the 31-column layout */
-  font-weight: 700;       /* Bold for legibility at tiny size */
-  min-width: 26px;        /* Ensures all shift codes have consistent width */
-  text-align: center;     /* Centers the 1–2 character shift code */
-}
-
-/* ── RESPONSIVE — MOBILE LAYOUT ───────────────────────────────────────────── */
-
-/* Applies when the viewport is 768px wide or narrower (tablets, phones) */
 @media (max-width: 768px) {
-
-  .sidebar {
-    position: fixed;     /* Takes sidebar out of document flow — overlays the main content */
-    left: -240px;        /* Hides sidebar off-screen to the left when mobile menu is closed */
-    transition: left 0.3s ease;  /* Smooth slide-in/slide-out animation when toggling */
-  }
-
-  .sidebar.open {
-    left: 0;  /* Slides sidebar back on-screen when the mobile menu button is tapped */
-  }
-
-  .menu-toggle {
-    display: block;  /* Shows the hamburger button on mobile (hidden on desktop) */
-  }
-
-  .topbar {
-    padding: 0 16px;  /* Reduces topbar horizontal padding on small screens */
-  }
-
-  .content-wrapper {
-    padding: 16px;   /* Reduces content area padding on small screens to maximise space */
-  }
-
-  .stat-cards {
-    gap: 10px;  /* Smaller gap between stat cards on mobile */
-  }
-
-  .stat-card {
-    min-width: 140px;  /* Allows stat cards to be slightly narrower on mobile */
-  }
-
-  .search-box {
-    margin-left: 0;  /* Removes the auto left-margin so search box stays in the flow on mobile */
-  }
-
-  .search-box input {
-    width: 150px;  /* Narrower search input on mobile to fit within the compact layout */
-  }
+  .sidebar { position: fixed; left: -260px; z-index: 100; height: 100%; }
+  .sidebar.open { left: 0; }
+  .topbar { padding: 0 16px; }
 }
