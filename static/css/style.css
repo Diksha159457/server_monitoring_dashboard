@@ -15,7 +15,25 @@
   --bg-input:      #21262d;   /* Input field background: dark container for text inputs */
   --border:        #30363d;   /* Border color: muted grey divider used on cards, rows, sidebar */
   --border-light:  #21262d;   /* Lighter border variant used for inner table row dividers */
+/* Default (Dark) Theme */
+:root, [data-theme="dark"] {
+  --bg-primary: #111827;
+  --text-main: #f3f4f6;
+  --card-bg: #1f2937;
+}
 
+/* Light Theme Override */
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --text-main: #1f2937;
+  --card-bg: #f9fafb;
+}
+
+/* Then use them in your elements */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+}
   --accent-blue:   #58a6ff;   /* Primary accent: bright blue for active nav items and links */
   --accent-green:  #3fb950;   /* Success/active status: green for "Active" badges and normal disk */
   --accent-amber:  #d29922;   /* Warning status: amber/gold for "Warning" badges and mid-disk usage */
